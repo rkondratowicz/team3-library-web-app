@@ -1,0 +1,24 @@
+{
+  "name": "team3-library-web-app",
+  "version": "1.0.0",
+  "description": "A TypeScript Express API for managing books",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.5.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  },
+  "keywords": ["express", "typescript", "api", "books"],
+  "author": "",
+  "license": "ISC"
+}
