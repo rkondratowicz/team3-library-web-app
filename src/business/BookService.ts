@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
+import type { IBookRepository } from '../data/BookRepository.js';
 import type {
   Book,
+  BusinessResult,
   CreateBookRequest,
   UpdateBookRequest,
-  BusinessResult,
 } from '../shared/types.js';
-import type { IBookRepository } from '../data/BookRepository.js';
 
 export interface IBookService {
   getAllBooks(): Promise<BusinessResult<Book[]>>;

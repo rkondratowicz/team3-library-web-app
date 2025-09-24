@@ -1,12 +1,12 @@
 import type { Request, Response } from 'express';
+import type { IBookService } from '../business/BookService.js';
 import type {
-  BooksResponse,
   BookResponse,
-  ErrorResponse,
+  BooksResponse,
   CreateBookRequest,
+  ErrorResponse,
   UpdateBookRequest,
 } from '../shared/types.js';
-import type { IBookService } from '../business/BookService.js';
 
 export class BookController {
   constructor(private bookService: IBookService) {}

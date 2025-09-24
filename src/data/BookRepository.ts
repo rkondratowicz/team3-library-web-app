@@ -1,6 +1,6 @@
-import sqlite3 from 'sqlite3';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sqlite3 from 'sqlite3';
 import type { Book } from '../shared/types.js';
 
 export interface IBookRepository {

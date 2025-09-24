@@ -1,6 +1,6 @@
 import express from 'express';
-import { BookRepository } from './data/BookRepository.js';
 import { BookService } from './business/BookService.js';
+import { BookRepository } from './data/BookRepository.js';
 import { BookController } from './presentation/BookController.js';
 import { HealthController } from './presentation/HealthController.js';
 import { createBookRoutes } from './presentation/routes.js';
