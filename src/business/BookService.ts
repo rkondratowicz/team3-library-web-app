@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { 
-  Book, 
-  CreateBookRequest, 
-  UpdateBookRequest, 
-  BusinessResult 
+import type {
+  Book,
+  CreateBookRequest,
+  UpdateBookRequest,
+  BusinessResult,
 } from '../shared/types.js';
 import type { IBookRepository } from '../data/BookRepository.js';
 
@@ -24,14 +24,14 @@ export class BookService implements IBookService {
       return {
         success: true,
         data: books,
-        statusCode: 200
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.getAllBooks:', error);
       return {
         success: false,
         error: 'Failed to fetch books',
-        statusCode: 500
+        statusCode: 500,
       };
     }
   }
@@ -43,31 +43,31 @@ export class BookService implements IBookService {
         return {
           success: false,
           error: 'Invalid book ID format',
-          statusCode: 400
+          statusCode: 400,
         };
       }
 
       const book = await this.bookRepository.getBookById(id);
-      
+
       if (!book) {
         return {
           success: false,
           error: 'Book not found',
-          statusCode: 404
+          statusCode: 404,
         };
       }
 
       return {
         success: true,
         data: book,
-        statusCode: 200
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.getBookById:', error);
       return {
         success: false,
         error: 'Failed to fetch book',
-        statusCode: 500
+        statusCode: 500,
       };
     }
   }
@@ -80,7 +80,7 @@ export class BookService implements IBookService {
         return {
           success: false,
           error: validation.error,
-          statusCode: 400
+          statusCode: 400,
         };
       }
 
@@ -88,7 +88,7 @@ export class BookService implements IBookService {
       const newBook: Book = {
         id: uuidv4(),
         author: bookData.author.trim(),
-        title: bookData.title.trim()
+        title: bookData.title.trim(),
       };
 
       await this.bookRepository.createBook(newBook);
@@ -96,14 +96,14 @@ export class BookService implements IBookService {
       return {
         success: true,
         data: newBook,
-        statusCode: 201
+        statusCode: 201,
       };
     } catch (error) {
       console.error('Error in BookService.createBook:', error);
       return {
         success: false,
         error: 'Failed to create book',
-        statusCode: 500
+        statusCode: 500,
       };
     }
   }
@@ -115,7 +115,7 @@ export class BookService implements IBookService {
         return {
           success: false,
           error: 'Invalid book ID format',
-          statusCode: 400
+          statusCode: 400,
         };
       }
 
@@ -126,7 +126,7 @@ export class BookService implements IBookService {
           return {
             success: false,
             error: validation.error,
-            statusCode: 400
+            statusCode: 400,
           };
         }
       }
@@ -137,7 +137,7 @@ export class BookService implements IBookService {
         return {
           success: false,
           error: 'Book not found',
-          statusCode: 404
+          statusCode: 404,
         };
       }
 
@@ -152,29 +152,29 @@ export class BookService implements IBookService {
 
       // Update book
       const updated = await this.bookRepository.updateBook(id, trimmedUpdates);
-      
+
       if (!updated) {
         return {
           success: false,
           error: 'No changes were made',
-          statusCode: 400
+          statusCode: 400,
         };
       }
 
       // Fetch and return updated book
       const updatedBook = await this.bookRepository.getBookById(id);
-      
+
       return {
         success: true,
         data: updatedBook!,
-        statusCode: 200
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.updateBook:', error);
       return {
         success: false,
         error: 'Failed to update book',
-        statusCode: 500
+        statusCode: 500,
       };
     }
   }
@@ -186,30 +186,30 @@ export class BookService implements IBookService {
         return {
           success: false,
           error: 'Invalid book ID format',
-          statusCode: 400
+          statusCode: 400,
         };
       }
 
       const deleted = await this.bookRepository.deleteBook(id);
-      
+
       if (!deleted) {
         return {
           success: false,
           error: 'Book not found',
-          statusCode: 404
+          statusCode: 404,
         };
       }
 
       return {
         success: true,
-        statusCode: 204
+        statusCode: 204,
       };
     } catch (error) {
       console.error('Error in BookService.deleteBook:', error);
       return {
         success: false,
         error: 'Failed to delete book',
-        statusCode: 500
+        statusCode: 500,
       };
     }
   }

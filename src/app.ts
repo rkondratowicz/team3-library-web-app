@@ -32,7 +32,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   console.error('Unhandled error:', err);
   res.status(500).json({
     error: 'Internal server error',
-    details: 'Something went wrong'
+    details: 'Something went wrong',
   });
 });
 
@@ -40,7 +40,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 app.use((_req, res) => {
   res.status(404).json({
     error: 'Not found',
-    details: 'The requested resource was not found'
+    details: 'The requested resource was not found',
   });
 });
 

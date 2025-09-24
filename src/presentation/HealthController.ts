@@ -7,7 +7,7 @@ export class HealthController {
     res.status(200).json({
       status: 'OK',
       timestamp: new Date().toISOString(),
-      service: 'Library API'
+      service: 'Library API',
     });
   };
 

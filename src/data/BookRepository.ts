@@ -19,16 +19,16 @@ export class BookRepository implements IBookRepository {
     // Get the directory path for ES modules
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    
+
     this.db = new sqlite3.Database(
-      join(__dirname, '..', '..', 'library.db'), 
+      join(__dirname, '..', '..', 'library.db'),
       (err: Error | null) => {
         if (err) {
           console.error('Error opening database:', err.message);
         } else {
           console.log('Connected to the SQLite database.');
         }
-      }
+      },
     );
   }
 
@@ -43,41 +43,33 @@ export class BookRepository implements IBookRepository {
           } else {
             resolve(rows);
           }
-        }
+        },
       );
     });
   }
 
   async getBookById(id: string): Promise<Book | null> {
     return new Promise((resolve, reject) => {
-      this.db.get(
-        'SELECT * FROM books WHERE id = ?',
-        [id],
-        (err: Error | null, row: Book) => {
-          if (err) {
-            reject(new Error(`Failed to fetch book: ${err.message}`));
-          } else {
-            resolve(row || null);
-          }
+      this.db.get('SELECT * FROM books WHERE id = ?', [id], (err: Error | null, row: Book) => {
+        if (err) {
+          reject(new Error(`Failed to fetch book: ${err.message}`));
+        } else {
+          resolve(row || null);
         }
-      );
+      });
     });
   }
 
   async createBook(book: Book): Promise<void> {
     return new Promise((resolve, reject) => {
       const query = 'INSERT INTO books (id, author, title) VALUES (?, ?, ?)';
-      this.db.run(
-        query,
-        [book.id, book.author, book.title],
-        (err: Error | null) => {
-          if (err) {
-            reject(new Error(`Failed to create book: ${err.message}`));
-          } else {
-            resolve();
-          }
+      this.db.run(query, [book.id, book.author, book.title], (err: Error | null) => {
+        if (err) {
+          reject(new Error(`Failed to create book: ${err.message}`));
+        } else {
+          resolve();
         }
-      );
+      });
     });
   }
 
@@ -115,17 +107,13 @@ export class BookRepository implements IBookRepository {
 
   async deleteBook(id: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      this.db.run(
-        'DELETE FROM books WHERE id = ?',
-        [id],
-        function (err: Error | null) {
-          if (err) {
-            reject(new Error(`Failed to delete book: ${err.message}`));
-          } else {
-            resolve(this.changes > 0);
-          }
+      this.db.run('DELETE FROM books WHERE id = ?', [id], function (err: Error | null) {
+        if (err) {
+          reject(new Error(`Failed to delete book: ${err.message}`));
+        } else {
+          resolve(this.changes > 0);
         }
-      );
+      });
     });
   }
 
@@ -140,7 +128,7 @@ export class BookRepository implements IBookRepository {
           } else {
             resolve(!!row);
           }
-        }
+        },
       );
     });
   }
