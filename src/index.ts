@@ -1,6 +1,6 @@
-import express, { type Request, type Response } from 'express';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import express, { type Request, type Response } from 'express';
 import sqlite3 from 'sqlite3';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -57,10 +57,12 @@ interface GreetingResponse {
 app.use(express.json());
 
 // Validation helper functions
-function isValidBookData(data: any): data is CreateBookRequest {
+function isValidBookData(data: unknown): data is CreateBookRequest {
   return (
-    data &&
+    data !== null &&
     typeof data === 'object' &&
+    'author' in data &&
+    'title' in data &&
     typeof data.author === 'string' &&
     typeof data.title === 'string' &&
     data.author.trim().length > 0 &&
@@ -76,7 +78,7 @@ app.get('/', (_req: Request, res: Response<BooksResponse | ErrorResponse>) => {
       console.error('Error fetching books:', err.message);
       res.status(500).json({
         error: 'Failed to fetch books',
-        details: 'Internal server error'
+        details: 'Internal server error',
       });
       return;
     }
@@ -89,7 +91,8 @@ app.post('/books', (req: Request, res: Response<BookResponse | ErrorResponse>) =
   if (!isValidBookData(req.body)) {
     res.status(400).json({
       error: 'Invalid book data',
-      details: 'Author and title are required and must be non-empty strings (max 255 characters each)'
+      details:
+        'Author and title are required and must be non-empty strings (max 255 characters each)',
     });
     return;
   }
@@ -104,12 +107,12 @@ app.post('/books', (req: Request, res: Response<BookResponse | ErrorResponse>) =
   // Insert book into database
   const query = 'INSERT INTO books (id, author, title) VALUES (?, ?, ?)';
 
-  db.run(query, [bookId, trimmedAuthor, trimmedTitle], function (err: Error | null) {
+  db.run(query, [bookId, trimmedAuthor, trimmedTitle], (err: Error | null) => {
     if (err) {
       console.error('Error creating book:', err.message);
       res.status(500).json({
         error: 'Failed to create book',
-        details: 'Internal server error'
+        details: 'Internal server error',
       });
       return;
     }
@@ -118,7 +121,7 @@ app.post('/books', (req: Request, res: Response<BookResponse | ErrorResponse>) =
     const newBook: Book = {
       id: bookId,
       author: trimmedAuthor,
-      title: trimmedTitle
+      title: trimmedTitle,
     };
 
     res.status(201).json({ book: newBook });

@@ -1,0 +1,33 @@
+name: Biome Check
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**/*.ts'
+      - '**/*.js'
+      - '**/*.json'
+      - 'biome.json'
+      - 'package.json'
+      - '.github/workflows/biome-check.yml'
+
+jobs:
+  biome-check:
+    name: Biome Formatting and Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run Biome check
+        run: npm run check
