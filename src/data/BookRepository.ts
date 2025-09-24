@@ -32,29 +32,91 @@ export class BookRepository implements IBookRepository {
     );
   }
 
+  private async getBookCopiesCount(bookId: string): Promise<{ total: number; available: number }> {
+    return new Promise((resolve, reject) => {
+      this.db.get(`
+        SELECT 
+          COUNT(*) as total,
+          SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available
+        FROM book_copies 
+        WHERE book_id = ?
+      `, [bookId], (err: Error | null, row: any) => {
+        if (err) {
+          reject(new Error(`Failed to get copy counts: ${err.message}`));
+        } else {
+          resolve({
+            total: row?.total || 0,
+            available: row?.available || 0
+          });
+        }
+      });
+    });
+  }
+
+  private enhanceBookWithCopyInfo(book: any): Book {
+    const enhanced: Book = {
+      ...book,
+      // Map database fields to UI-friendly names
+      category: book.genre,
+      publishedYear: book.publication_year,
+      // Will be populated by getBookCopiesCount
+      totalCopies: 1,
+      availableCopies: 1,
+      available: true
+    };
+    return enhanced;
+  }
+
   async getAllBooks(): Promise<Book[]> {
     return new Promise((resolve, reject) => {
-      this.db.all(
-        'SELECT * FROM books ORDER BY author, title',
-        [],
-        (err: Error | null, rows: Book[]) => {
-          if (err) {
-            reject(new Error(`Failed to fetch books: ${err.message}`));
-          } else {
-            resolve(rows);
-          }
-        },
-      );
+      this.db.all(`
+        SELECT 
+          b.*,
+          COUNT(bc.id) as total_copies,
+          SUM(CASE WHEN bc.status = 'available' THEN 1 ELSE 0 END) as available_copies
+        FROM books b
+        LEFT JOIN book_copies bc ON b.id = bc.book_id
+        GROUP BY b.id
+        ORDER BY b.author, b.title
+      `, [], async (err: Error | null, rows: any[]) => {
+        if (err) {
+          reject(new Error(`Failed to fetch books: ${err.message}`));
+        } else {
+          const books = rows.map(row => {
+            const book = this.enhanceBookWithCopyInfo(row);
+            book.totalCopies = row.total_copies || 1;
+            book.availableCopies = row.available_copies || (row.total_copies > 0 ? 0 : 1);
+            book.available = (book.availableCopies || 0) > 0;
+            return book;
+          });
+          resolve(books);
+        }
+      });
     });
   }
 
   async getBookById(id: string): Promise<Book | null> {
     return new Promise((resolve, reject) => {
-      this.db.get('SELECT * FROM books WHERE id = ?', [id], (err: Error | null, row: Book) => {
+      this.db.get(`
+        SELECT 
+          b.*,
+          COUNT(bc.id) as total_copies,
+          SUM(CASE WHEN bc.status = 'available' THEN 1 ELSE 0 END) as available_copies
+        FROM books b
+        LEFT JOIN book_copies bc ON b.id = bc.book_id
+        WHERE b.id = ?
+        GROUP BY b.id
+      `, [id], (err: Error | null, row: any) => {
         if (err) {
           reject(new Error(`Failed to fetch book: ${err.message}`));
+        } else if (!row) {
+          resolve(null);
         } else {
-          resolve(row || null);
+          const book = this.enhanceBookWithCopyInfo(row);
+          book.totalCopies = row.total_copies || 1;
+          book.availableCopies = row.available_copies || (row.total_copies > 0 ? 0 : 1);
+          book.available = (book.availableCopies || 0) > 0;
+          resolve(book);
         }
       });
     });
@@ -62,22 +124,64 @@ export class BookRepository implements IBookRepository {
 
   async createBook(book: Book): Promise<void> {
     return new Promise((resolve, reject) => {
-      const query = 'INSERT INTO books (id, author, title) VALUES (?, ?, ?)';
-      this.db.run(query, [book.id, book.author, book.title], (err: Error | null) => {
+      const query = `
+        INSERT INTO books (id, author, title, isbn, genre, publication_year, description, created_at, updated_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      `;
+
+      // Map UI fields to database fields
+      const genre = book.category || book.genre;
+      const publicationYear = book.publishedYear || book.publication_year;
+
+      this.db.run(query, [
+        book.id,
+        book.author,
+        book.title,
+        book.isbn,
+        genre,
+        publicationYear,
+        book.description
+      ], (err: Error | null) => {
         if (err) {
           reject(new Error(`Failed to create book: ${err.message}`));
         } else {
-          resolve();
+          // Create initial book copies
+          const totalCopies = book.totalCopies || 1;
+          this.createBookCopies(book.id, totalCopies)
+            .then(() => resolve())
+            .catch(reject);
         }
       });
     });
   }
 
+  private async createBookCopies(bookId: string, count: number): Promise<void> {
+    const promises = [];
+    for (let i = 1; i <= count; i++) {
+      const copyId = `${bookId}-copy-${i}`;
+      const promise = new Promise<void>((resolve, reject) => {
+        this.db.run(`
+          INSERT INTO book_copies (id, book_id, copy_number, status, condition, created_at, updated_at)
+          VALUES (?, ?, ?, 'available', 'good', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `, [copyId, bookId, i], (err: Error | null) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+      promises.push(promise);
+    }
+    await Promise.all(promises);
+  }
+
   async updateBook(id: string, updates: Partial<Book>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const fields: string[] = [];
-      const values: (string | undefined)[] = [];
+      const values: any[] = [];
 
+      // Map UI fields to database fields and build update query
       if (updates.author !== undefined) {
         fields.push('author = ?');
         values.push(updates.author);
@@ -86,12 +190,29 @@ export class BookRepository implements IBookRepository {
         fields.push('title = ?');
         values.push(updates.title);
       }
+      if (updates.isbn !== undefined) {
+        fields.push('isbn = ?');
+        values.push(updates.isbn);
+      }
+      if (updates.category !== undefined || updates.genre !== undefined) {
+        fields.push('genre = ?');
+        values.push(updates.category || updates.genre);
+      }
+      if (updates.publishedYear !== undefined || updates.publication_year !== undefined) {
+        fields.push('publication_year = ?');
+        values.push(updates.publishedYear || updates.publication_year);
+      }
+      if (updates.description !== undefined) {
+        fields.push('description = ?');
+        values.push(updates.description);
+      }
 
       if (fields.length === 0) {
         resolve(false);
         return;
       }
 
+      fields.push('updated_at = CURRENT_TIMESTAMP');
       values.push(id);
       const query = `UPDATE books SET ${fields.join(', ')} WHERE id = ?`;
 
@@ -107,11 +228,19 @@ export class BookRepository implements IBookRepository {
 
   async deleteBook(id: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      this.db.run('DELETE FROM books WHERE id = ?', [id], function (err: Error | null) {
+      // Delete book copies first (due to foreign key constraint)
+      this.db.run('DELETE FROM book_copies WHERE book_id = ?', [id], (err: Error | null) => {
         if (err) {
-          reject(new Error(`Failed to delete book: ${err.message}`));
+          reject(new Error(`Failed to delete book copies: ${err.message}`));
         } else {
-          resolve(this.changes > 0);
+          // Then delete the book
+          this.db.run('DELETE FROM books WHERE id = ?', [id], function (err: Error | null) {
+            if (err) {
+              reject(new Error(`Failed to delete book: ${err.message}`));
+            } else {
+              resolve(this.changes > 0);
+            }
+          });
         }
       });
     });

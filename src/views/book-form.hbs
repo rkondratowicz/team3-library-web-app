@@ -1,0 +1,136 @@
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-{{#if book}}edit{{else}}plus{{/if}}"></i>
+                    {{#if book}}Edit Book{{else}}Add New Book{{/if}}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form id="book-form" {{#if book}}data-book-id="{{book.id}}"{{/if}}>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="{{#if book}}{{book.title}}{{/if}}" required>
+                                <div class="invalid-feedback">Please provide a valid title.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="author" class="form-label">Author *</label>
+                                <input type="text" class="form-control" id="author" name="author" 
+                                       value="{{#if book}}{{book.author}}{{/if}}" required>
+                                <div class="invalid-feedback">Please provide a valid author.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="isbn" class="form-label">ISBN *</label>
+                                <input type="text" class="form-control" id="isbn" name="isbn" 
+                                       value="{{#if book}}{{book.isbn}}{{/if}}" required
+                                       pattern="[0-9X-]+" title="Please enter a valid ISBN">
+                                <div class="form-text">Enter ISBN with or without hyphens</div>
+                                <div class="invalid-feedback">Please provide a valid ISBN.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="publishedYear" class="form-label">Published Year</label>
+                                <input type="number" class="form-control" id="publishedYear" name="publishedYear" 
+                                       value="{{#if book}}{{book.publishedYear}}{{/if}}"
+                                       min="1000" max="2025">
+                                <div class="invalid-feedback">Please provide a valid year.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category" name="category">
+                                    <option value="">Select a category</option>
+                                    <option value="Fiction" {{#if (eq book.category "Fiction")}}selected{{/if}}>Fiction</option>
+                                    <option value="Non-Fiction" {{#if (eq book.category "Non-Fiction")}}selected{{/if}}>Non-Fiction</option>
+                                    <option value="Science" {{#if (eq book.category "Science")}}selected{{/if}}>Science</option>
+                                    <option value="Technology" {{#if (eq book.category "Technology")}}selected{{/if}}>Technology</option>
+                                    <option value="History" {{#if (eq book.category "History")}}selected{{/if}}>History</option>
+                                    <option value="Biography" {{#if (eq book.category "Biography")}}selected{{/if}}>Biography</option>
+                                    <option value="Other" {{#if (eq book.category "Other")}}selected{{/if}}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="totalCopies" class="form-label">Total Copies</label>
+                                <input type="number" class="form-control" id="totalCopies" name="totalCopies" 
+                                       value="{{#if book}}{{book.totalCopies}}{{else}}1{{/if}}"
+                                       min="1" max="100">
+                                <div class="invalid-feedback">Please provide a valid number of copies.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" 
+                                  placeholder="Enter a brief description of the book...">{{#if book}}{{book.description}}{{/if}}</textarea>
+                        <div class="form-text">Optional: Provide a summary or description of the book</div>
+                    </div>
+
+                    {{#if book}}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="availableCopies" class="form-label">Available Copies</label>
+                                <input type="number" class="form-control" id="availableCopies" name="availableCopies" 
+                                       value="{{book.availableCopies}}"
+                                       min="0" max="{{book.totalCopies}}">
+                                <div class="form-text">Number of copies currently available</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="available" name="available" 
+                                           {{#if book.available}}checked{{/if}}>
+                                    <label class="form-check-label" for="available">
+                                        Book is available for checkout
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{/if}}
+
+                    <div class="alert alert-danger" id="error-alert" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="error-message"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/books" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Books
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary me-2" id="reset-form">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="submit-btn">
+                                <span class="spinner-border spinner-border-sm me-2" style="display: none;"></span>
+                                <i class="fas fa-{{#if book}}save{{else}}plus{{/if}}"></i>
+                                {{#if book}}Update Book{{else}}Add Book{{/if}}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

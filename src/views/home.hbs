@@ -1,0 +1,94 @@
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white rounded p-5 mb-4">
+            <div class="container-fluid py-5">
+                <h1 class="display-5 fw-bold">Welcome to the Library Management System</h1>
+                <p class="col-md-8 fs-4">Manage your book collection with ease. Add, edit, search, and organize your library's books efficiently.</p>
+                <a href="/books" class="btn btn-light btn-lg">
+                    <i class="fas fa-book"></i> Browse Books
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-book fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Browse Books</h5>
+                <p class="card-text">View all books in your library collection with detailed information and availability status.</p>
+                <a href="/books" class="btn btn-primary">View Books</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-plus fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title">Add New Book</h5>
+                <p class="card-text">Add new books to your library collection with comprehensive details and metadata.</p>
+                <a href="/books/add" class="btn btn-success">Add Book</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-search fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">Search & Filter</h5>
+                <p class="card-text">Find books quickly using our powerful search and filtering capabilities.</p>
+                <a href="/books" class="btn btn-info">Search Books</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar"></i> Library Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="statistic">
+                            <h3 class="text-primary" id="total-books">{{totalBooks}}</h3>
+                            <p class="mb-0">Total Books</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="statistic">
+                            <h3 class="text-success" id="available-books">{{availableBooks}}</h3>
+                            <p class="mb-0">Available</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="statistic">
+                            <h3 class="text-warning" id="checked-out">{{checkedOut}}</h3>
+                            <p class="mb-0">Checked Out</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="statistic">
+                            <h3 class="text-info" id="unique-authors">{{uniqueAuthors}}</h3>
+                            <p class="mb-0">Authors</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

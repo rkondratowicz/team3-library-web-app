@@ -1,0 +1,216 @@
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-book"></i> Book Details
+            </h1>
+            <div class="btn-group">
+                <a href="/books/{{book.id}}/edit" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <button class="btn btn-danger" onclick="deleteBook('{{book.id}}')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">{{book.title}}</h3>
+                    <span class="badge {{#if book.available}}bg-success{{else}}bg-warning{{/if}} fs-6">
+                        {{#if book.available}}Available{{else}}Checked Out{{/if}}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-sm-3">
+                        <strong>Author:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        {{book.author}}
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-sm-3">
+                        <strong>ISBN:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <code>{{book.isbn}}</code>
+                    </div>
+                </div>
+
+                {{#if book.publishedYear}}
+                <div class="row mb-4">
+                    <div class="col-sm-3">
+                        <strong>Published Year:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        {{book.publishedYear}}
+                    </div>
+                </div>
+                {{/if}}
+
+                {{#if book.category}}
+                <div class="row mb-4">
+                    <div class="col-sm-3">
+                        <strong>Category:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <span class="badge bg-info">{{book.category}}</span>
+                    </div>
+                </div>
+                {{/if}}
+
+                {{#if book.description}}
+                <div class="row mb-4">
+                    <div class="col-sm-3">
+                        <strong>Description:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <p class="mb-0">{{book.description}}</p>
+                    </div>
+                </div>
+                {{/if}}
+
+                <div class="row mb-4">
+                    <div class="col-sm-3">
+                        <strong>Added:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        {{formatDate book.createdAt}}
+                    </div>
+                </div>
+
+                {{#if book.updatedAt}}
+                <div class="row mb-4">
+                    <div class="col-sm-3">
+                        <strong>Last Updated:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        {{formatDate book.updatedAt}}
+                    </div>
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Availability Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-list"></i> Availability
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="statistic">
+                            <h3 class="text-primary">{{book.totalCopies}}</h3>
+                            <p class="mb-0">Total Copies</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="statistic">
+                            <h3 class="{{#if book.available}}text-success{{else}}text-warning{{/if}}">
+                                {{book.availableCopies}}
+                            </h3>
+                            <p class="mb-0">Available</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{#if book.available}}
+                <div class="mt-3">
+                    <button class="btn btn-success w-100">
+                        <i class="fas fa-check"></i> Available for Checkout
+                    </button>
+                </div>
+                {{else}}
+                <div class="mt-3">
+                    <button class="btn btn-warning w-100" disabled>
+                        <i class="fas fa-clock"></i> All Copies Checked Out
+                    </button>
+                </div>
+                {{/if}}
+            </div>
+        </div>
+
+        <!-- Actions Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools"></i> Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/books/{{book.id}}/edit" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Book
+                    </a>
+                    <button class="btn btn-outline-secondary" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print Details
+                    </button>
+                    <button class="btn btn-outline-info" onclick="shareBook('{{book.id}}')">
+                        <i class="fas fa-share"></i> Share Book
+                    </button>
+                    <hr>
+                    <button class="btn btn-danger" onclick="deleteBook('{{book.id}}')">
+                        <i class="fas fa-trash"></i> Delete Book
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between">
+            <a href="/books" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Books
+            </a>
+            <div class="btn-group">
+                {{#if previousBook}}
+                <a href="/books/{{previousBook.id}}" class="btn btn-outline-primary">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+                {{/if}}
+                {{#if nextBook}}
+                <a href="/books/{{nextBook.id}}" class="btn btn-outline-primary">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete "<strong>{{book.title}}</strong>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
