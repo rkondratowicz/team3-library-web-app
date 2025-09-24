@@ -32,180 +32,123 @@ export class BookRepository implements IBookRepository {
     );
   }
 
-  private enhanceBookWithCopyInfo(book: BookDbRow): Book {
-    const enhanced: Book = {
-      ...book,
-      // Map database fields to UI-friendly names
-      category: book.genre,
-      publishedYear: book.publication_year,
-      // Will be populated by getBookCopiesCount
-      totalCopies: 1,
-      availableCopies: 1,
-      available: true,
+  private mapDbRowToBook(row: BookDbRow): Book {
+    return {
+      id: row.id,
+      author: row.author,
+      title: row.title,
+      isbn: row.isbn,
+      genre: row.genre,
+      publication_year: row.publication_year,
+      description: row.description
     };
-    return enhanced;
   }
 
   async getAllBooks(): Promise<Book[]> {
     return new Promise((resolve, reject) => {
-      this.db.all(
-        `
-        SELECT 
-          b.*,
-          COUNT(bc.id) as total_copies,
-          SUM(CASE WHEN bc.status = 'available' THEN 1 ELSE 0 END) as available_copies
-        FROM books b
-        LEFT JOIN book_copies bc ON b.id = bc.book_id
-        GROUP BY b.id
-        ORDER BY b.author, b.title
-      `,
-        [],
-        async (err: Error | null, rows: BookDbRow[]) => {
-          if (err) {
-            reject(new Error(`Failed to fetch books: ${err.message}`));
-          } else {
-            const books = rows.map((row) => {
-              const book = this.enhanceBookWithCopyInfo(row);
-              book.totalCopies = row.total_copies || 1;
-              book.availableCopies = row.available_copies || ((row.total_copies || 0) > 0 ? 0 : 1);
-              book.available = (book.availableCopies || 0) > 0;
-              return book;
-            });
-            resolve(books);
-          }
-        },
-      );
+      const sql = `
+        SELECT id, author, title, isbn, genre, publication_year, description 
+        FROM books 
+        ORDER BY title ASC
+      `;
+
+      this.db.all(sql, [], (err: Error | null, rows: any[]) => {
+        if (err) {
+          console.error('Error in getAllBooks:', err);
+          reject(err);
+        } else {
+          const books: Book[] = rows.map(row => this.mapDbRowToBook(row));
+          resolve(books);
+        }
+      });
     });
   }
 
   async getBookById(id: string): Promise<Book | null> {
     return new Promise((resolve, reject) => {
-      this.db.get(
-        `
-        SELECT 
-          b.*,
-          COUNT(bc.id) as total_copies,
-          SUM(CASE WHEN bc.status = 'available' THEN 1 ELSE 0 END) as available_copies
-        FROM books b
-        LEFT JOIN book_copies bc ON b.id = bc.book_id
-        WHERE b.id = ?
-        GROUP BY b.id
-      `,
-        [id],
-        (err: Error | null, row: BookDbRow) => {
-          if (err) {
-            reject(new Error(`Failed to fetch book: ${err.message}`));
-          } else if (!row) {
-            resolve(null);
-          } else {
-            const book = this.enhanceBookWithCopyInfo(row);
-            book.totalCopies = row.total_copies || 1;
-            book.availableCopies = row.available_copies || ((row.total_copies || 0) > 0 ? 0 : 1);
-            book.available = (book.availableCopies || 0) > 0;
-            resolve(book);
-          }
-        },
-      );
+      const sql = `
+        SELECT id, author, title, isbn, genre, publication_year, description 
+        FROM books 
+        WHERE id = ?
+      `;
+
+      this.db.get(sql, [id], (err: Error | null, row: any) => {
+        if (err) {
+          console.error('Error in getBookById:', err);
+          reject(err);
+        } else if (row) {
+          resolve(this.mapDbRowToBook(row));
+        } else {
+          resolve(null);
+        }
+      });
     });
   }
 
   async createBook(book: Book): Promise<void> {
     return new Promise((resolve, reject) => {
-      const query = `
-        INSERT INTO books (id, author, title, isbn, genre, publication_year, description, created_at, updated_at) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      const sql = `
+        INSERT INTO books (id, author, title, isbn, genre, publication_year, description) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `;
 
-      // Map UI fields to database fields
-      const genre = book.category || book.genre;
-      const publicationYear = book.publishedYear || book.publication_year;
-
       this.db.run(
-        query,
-        [book.id, book.author, book.title, book.isbn, genre, publicationYear, book.description],
-        (err: Error | null) => {
+        sql,
+        [book.id, book.author, book.title, book.isbn, book.genre, book.publication_year, book.description],
+        function (err: Error | null) {
           if (err) {
-            reject(new Error(`Failed to create book: ${err.message}`));
+            console.error('Error in createBook:', err);
+            reject(err);
           } else {
-            // Create initial book copies
-            const totalCopies = book.totalCopies || 1;
-            this.createBookCopies(book.id, totalCopies)
-              .then(() => resolve())
-              .catch(reject);
+            resolve();
           }
-        },
+        }
       );
     });
   }
 
-  private async createBookCopies(bookId: string, count: number): Promise<void> {
-    const promises = [];
-    for (let i = 1; i <= count; i++) {
-      const copyId = `${bookId}-copy-${i}`;
-      const promise = new Promise<void>((resolve, reject) => {
-        this.db.run(
-          `
-          INSERT INTO book_copies (id, book_id, copy_number, status, condition, created_at, updated_at)
-          VALUES (?, ?, ?, 'available', 'good', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        `,
-          [copyId, bookId, i],
-          (err: Error | null) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve();
-            }
-          },
-        );
-      });
-      promises.push(promise);
-    }
-    await Promise.all(promises);
-  }
-
   async updateBook(id: string, updates: Partial<Book>): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const fields: string[] = [];
-      const values: (string | number | undefined)[] = [];
+      const updateFields: string[] = [];
+      const values: any[] = [];
 
-      // Map UI fields to database fields and build update query
       if (updates.author !== undefined) {
-        fields.push('author = ?');
+        updateFields.push('author = ?');
         values.push(updates.author);
       }
       if (updates.title !== undefined) {
-        fields.push('title = ?');
+        updateFields.push('title = ?');
         values.push(updates.title);
       }
       if (updates.isbn !== undefined) {
-        fields.push('isbn = ?');
+        updateFields.push('isbn = ?');
         values.push(updates.isbn);
       }
-      if (updates.category !== undefined || updates.genre !== undefined) {
-        fields.push('genre = ?');
-        values.push(updates.category || updates.genre);
+      if (updates.genre !== undefined) {
+        updateFields.push('genre = ?');
+        values.push(updates.genre);
       }
-      if (updates.publishedYear !== undefined || updates.publication_year !== undefined) {
-        fields.push('publication_year = ?');
-        values.push(updates.publishedYear || updates.publication_year);
+      if (updates.publication_year !== undefined) {
+        updateFields.push('publication_year = ?');
+        values.push(updates.publication_year);
       }
       if (updates.description !== undefined) {
-        fields.push('description = ?');
+        updateFields.push('description = ?');
         values.push(updates.description);
       }
 
-      if (fields.length === 0) {
+      if (updateFields.length === 0) {
         resolve(false);
         return;
       }
 
-      fields.push('updated_at = CURRENT_TIMESTAMP');
       values.push(id);
-      const query = `UPDATE books SET ${fields.join(', ')} WHERE id = ?`;
+      const sql = `UPDATE books SET ${updateFields.join(', ')} WHERE id = ?`;
 
-      this.db.run(query, values, function (err: Error | null) {
+      this.db.run(sql, values, function (err: Error | null) {
         if (err) {
-          reject(new Error(`Failed to update book: ${err.message}`));
+          console.error('Error in updateBook:', err);
+          reject(err);
         } else {
           resolve(this.changes > 0);
         }

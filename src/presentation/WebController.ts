@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import type { IBookService } from '../business/BookService.js';
 
 export class WebController {
-  constructor(private bookService: IBookService) {}
+  constructor(private bookService: IBookService) { }
 
   // GET / - Home page
   home = async (_req: Request, res: Response): Promise<void> => {
@@ -19,8 +19,9 @@ export class WebController {
       if (result.success && result.data) {
         const books = result.data;
         stats.totalBooks = books.length;
-        stats.availableBooks = books.filter((book) => book.available).length;
-        stats.checkedOut = stats.totalBooks - stats.availableBooks;
+        // For now, assume all books are available until copy tracking is fully implemented
+        stats.availableBooks = books.length;
+        stats.checkedOut = 0;
         stats.uniqueAuthors = new Set(books.map((book) => book.author)).size;
       }
 
