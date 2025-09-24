@@ -1,7 +1,8 @@
+import express, { type Request, type Response } from 'express';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import express, { type Request, type Response } from 'express';
 import sqlite3 from 'sqlite3';
+import { v4 as uuidv4 } from 'uuid';
 
 const app = express();
 const port: number = 3001;
@@ -26,9 +27,26 @@ interface Book {
   title: string;
 }
 
+// Interface for creating a new book (without ID)
+interface CreateBookRequest {
+  author: string;
+  title: string;
+}
+
 // Interface for the books response
 interface BooksResponse {
   Books: Book[];
+}
+
+// Interface for single book response
+interface BookResponse {
+  book: Book;
+}
+
+// Interface for error response
+interface ErrorResponse {
+  error: string;
+  details?: string;
 }
 
 // Interface for greeting response
@@ -38,20 +56,73 @@ interface GreetingResponse {
 
 app.use(express.json());
 
-app.get('/', (_req: Request, res: Response<BooksResponse>) => {
-  db.all('SELECT * FROM books', [], (err: Error | null, rows: Book[]) => {
+// Validation helper functions
+function isValidBookData(data: any): data is CreateBookRequest {
+  return (
+    data &&
+    typeof data === 'object' &&
+    typeof data.author === 'string' &&
+    typeof data.title === 'string' &&
+    data.author.trim().length > 0 &&
+    data.title.trim().length > 0 &&
+    data.author.trim().length <= 255 &&
+    data.title.trim().length <= 255
+  );
+}
+
+app.get('/', (_req: Request, res: Response<BooksResponse | ErrorResponse>) => {
+  db.all('SELECT * FROM books ORDER BY author, title', [], (err: Error | null, rows: Book[]) => {
     if (err) {
       console.error('Error fetching books:', err.message);
-      res.status(500).json({ Books: [] });
+      res.status(500).json({
+        error: 'Failed to fetch books',
+        details: 'Internal server error'
+      });
       return;
     }
     res.json({ Books: rows });
   });
 });
 
-app.post('/books', (req: Request, res: Response) => {
-  const body = req.body;
-  res.send(`Book created, youve sent: ${JSON.stringify(body)}`);
+app.post('/books', (req: Request, res: Response<BookResponse | ErrorResponse>) => {
+  // Validate request body
+  if (!isValidBookData(req.body)) {
+    res.status(400).json({
+      error: 'Invalid book data',
+      details: 'Author and title are required and must be non-empty strings (max 255 characters each)'
+    });
+    return;
+  }
+
+  const { author, title } = req.body;
+  const bookId = uuidv4();
+
+  // Trim whitespace from input
+  const trimmedAuthor = author.trim();
+  const trimmedTitle = title.trim();
+
+  // Insert book into database
+  const query = 'INSERT INTO books (id, author, title) VALUES (?, ?, ?)';
+
+  db.run(query, [bookId, trimmedAuthor, trimmedTitle], function (err: Error | null) {
+    if (err) {
+      console.error('Error creating book:', err.message);
+      res.status(500).json({
+        error: 'Failed to create book',
+        details: 'Internal server error'
+      });
+      return;
+    }
+
+    // Return the created book
+    const newBook: Book = {
+      id: bookId,
+      author: trimmedAuthor,
+      title: trimmedTitle
+    };
+
+    res.status(201).json({ book: newBook });
+  });
 });
 
 app.get('/greet', (req: Request, res: Response<GreetingResponse>) => {
