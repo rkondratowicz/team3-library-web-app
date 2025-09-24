@@ -1,7 +1,7 @@
-import express, { Request, Response } from 'express';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import express, { type Request, type Response } from 'express';
 import sqlite3 from 'sqlite3';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
 const app = express();
 const port: number = 3001;
@@ -38,7 +38,7 @@ interface GreetingResponse {
 
 app.use(express.json());
 
-app.get('/', (req: Request, res: Response<BooksResponse>) => {
+app.get('/', (_req: Request, res: Response<BooksResponse>) => {
   db.all('SELECT * FROM books', [], (err: Error | null, rows: Book[]) => {
     if (err) {
       console.error('Error fetching books:', err.message);
@@ -51,12 +51,12 @@ app.get('/', (req: Request, res: Response<BooksResponse>) => {
 
 app.post('/books', (req: Request, res: Response) => {
   const body = req.body;
-  res.send("Book created, youve sent: " + JSON.stringify(body));
+  res.send(`Book created, youve sent: ${JSON.stringify(body)}`);
 });
 
 app.get('/greet', (req: Request, res: Response<GreetingResponse>) => {
   const personName: string = (req.query.q as string) || 'Guest';
-  res.json({ "message": `Hello, ${personName}!` });
+  res.json({ message: `Hello, ${personName}!` });
 });
 
 app.listen(port, () => {
