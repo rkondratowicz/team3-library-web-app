@@ -28,6 +28,22 @@ export interface BookCopy {
   updated_at?: string;
 }
 
+// Database row types (raw data from SQLite)
+export interface BookDbRow {
+  id: string;
+  author: string;
+  title: string;
+  isbn?: string;
+  genre?: string;
+  publication_year?: number;
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
+  // Aggregated fields from joins
+  total_copies?: number;
+  available_copies?: number;
+}
+
 export interface CreateBookRequest {
   author: string;
   title: string;

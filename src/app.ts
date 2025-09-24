@@ -1,13 +1,13 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { create } from 'express-handlebars';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { BookService } from './business/BookService.js';
 import { BookRepository } from './data/BookRepository.js';
 import { BookController } from './presentation/BookController.js';
 import { HealthController } from './presentation/HealthController.js';
-import { WebController } from './presentation/WebController.js';
 import { createBookRoutes } from './presentation/routes.js';
+import { WebController } from './presentation/WebController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,16 +22,16 @@ const hbs = create({
   layoutsDir: path.join(__dirname, 'views/layouts'),
   partialsDir: path.join(__dirname, 'views/partials'),
   helpers: {
-    eq: (a: any, b: any) => a === b,
+    eq: (a: unknown, b: unknown) => a === b,
     truncate: (str: string, length: number) => {
       if (!str || str.length <= length) return str;
-      return str.substring(0, length) + '...';
+      return `${str.substring(0, length)}...`;
     },
     formatDate: (date: string) => {
       if (!date) return '';
       return new Date(date).toLocaleDateString();
-    }
-  }
+    },
+  },
 });
 
 // Set up view engine
@@ -78,7 +78,7 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
     res.status(500).render('error', {
       title: 'Server Error',
       error: 'Internal Server Error',
-      details: 'Something went wrong on our end.'
+      details: 'Something went wrong on our end.',
     });
   }
 });
@@ -96,7 +96,7 @@ app.use((req, res) => {
     res.status(404).render('error', {
       title: 'Page Not Found',
       error: 'Page Not Found',
-      details: 'The requested page could not be found.'
+      details: 'The requested page could not be found.',
     });
   }
 });
