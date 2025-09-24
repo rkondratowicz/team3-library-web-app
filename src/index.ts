@@ -57,10 +57,12 @@ interface GreetingResponse {
 app.use(express.json());
 
 // Validation helper functions
-function isValidBookData(data: any): data is CreateBookRequest {
+function isValidBookData(data: unknown): data is CreateBookRequest {
   return (
-    data &&
+    data !== null &&
     typeof data === 'object' &&
+    'author' in data &&
+    'title' in data &&
     typeof data.author === 'string' &&
     typeof data.title === 'string' &&
     data.author.trim().length > 0 &&
@@ -89,7 +91,8 @@ app.post('/books', (req: Request, res: Response<BookResponse | ErrorResponse>) =
   if (!isValidBookData(req.body)) {
     res.status(400).json({
       error: 'Invalid book data',
-      details: 'Author and title are required and must be non-empty strings (max 255 characters each)'
+      details:
+        'Author and title are required and must be non-empty strings (max 255 characters each)',
     });
     return;
   }
@@ -109,7 +112,7 @@ app.post('/books', (req: Request, res: Response<BookResponse | ErrorResponse>) =
       console.error('Error creating book:', err.message);
       res.status(500).json({
         error: 'Failed to create book',
-        details: 'Internal server error'
+        details: 'Internal server error',
       });
       return;
     }
@@ -118,7 +121,7 @@ app.post('/books', (req: Request, res: Response<BookResponse | ErrorResponse>) =
     const newBook: Book = {
       id: bookId,
       author: trimmedAuthor,
-      title: trimmedTitle
+      title: trimmedTitle,
     };
 
     res.status(201).json({ book: newBook });
