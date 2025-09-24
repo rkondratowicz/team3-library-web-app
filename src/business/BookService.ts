@@ -397,11 +397,36 @@ export class BookService implements IBookService {
         };
       }
 
-      // TODO: Implement when repository method is available
+      // Check if book exists first
+      const bookExists = await this.bookRepository.bookExists(bookId);
+      if (!bookExists) {
+        return {
+          success: false,
+          error: 'Book not found',
+          statusCode: 404,
+        };
+      }
+
+      // Get next copy number
+      const copyNumber = await this.bookRepository.getNextCopyNumber(bookId);
+
+      // Create new book copy
+      const newBookCopy: BookCopy = {
+        id: uuidv4(),
+        book_id: bookId,
+        copy_number: copyNumber,
+        status: 'available',
+        condition: copyData.condition || 'good',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      await this.bookRepository.createBookCopy(newBookCopy);
+
       return {
-        success: false,
-        error: 'Method not implemented yet',
-        statusCode: 501,
+        success: true,
+        data: newBookCopy,
+        statusCode: 201,
       };
     } catch (error) {
       console.error('Error in BookService.addBookCopy:', error);
@@ -423,11 +448,37 @@ export class BookService implements IBookService {
         };
       }
 
-      // TODO: Implement when repository method is available
+      // Check if copy exists first
+      const copy = await this.bookRepository.getBookCopyById(copyId);
+      if (!copy) {
+        return {
+          success: false,
+          error: 'Book copy not found',
+          statusCode: 404,
+        };
+      }
+
+      // Check if copy can be removed (not borrowed)
+      if (copy.status === 'borrowed') {
+        return {
+          success: false,
+          error: 'Cannot remove borrowed book copy',
+          statusCode: 400,
+        };
+      }
+
+      const deleted = await this.bookRepository.deleteBookCopy(copyId);
+      if (!deleted) {
+        return {
+          success: false,
+          error: 'Failed to remove book copy',
+          statusCode: 500,
+        };
+      }
+
       return {
-        success: false,
-        error: 'Method not implemented yet',
-        statusCode: 501,
+        success: true,
+        statusCode: 204,
       };
     } catch (error) {
       console.error('Error in BookService.removeBookCopy:', error);
@@ -449,11 +500,42 @@ export class BookService implements IBookService {
         };
       }
 
-      // TODO: Implement when repository method is available
+      // Validate status
+      const validStatuses = ['available', 'borrowed', 'maintenance'];
+      if (!validStatuses.includes(status)) {
+        return {
+          success: false,
+          error: 'Invalid status. Must be one of: available, borrowed, maintenance',
+          statusCode: 400,
+        };
+      }
+
+      // Check if copy exists
+      const copy = await this.bookRepository.getBookCopyById(copyId);
+      if (!copy) {
+        return {
+          success: false,
+          error: 'Book copy not found',
+          statusCode: 404,
+        };
+      }
+
+      // Update the copy status
+      const updated = await this.bookRepository.updateBookCopy(copyId, { status: status as 'available' | 'borrowed' | 'maintenance' });
+      if (!updated) {
+        return {
+          success: false,
+          error: 'Failed to update book copy status',
+          statusCode: 500,
+        };
+      }
+
+      // Get updated copy
+      const updatedCopy = await this.bookRepository.getBookCopyById(copyId);
       return {
-        success: false,
-        error: 'Method not implemented yet',
-        statusCode: 501,
+        success: true,
+        data: updatedCopy!,
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.updateBookCopyStatus:', error);
@@ -475,11 +557,42 @@ export class BookService implements IBookService {
         };
       }
 
-      // TODO: Implement when repository method is available
+      // Validate condition
+      const validConditions = ['excellent', 'good', 'fair', 'poor'];
+      if (!validConditions.includes(condition)) {
+        return {
+          success: false,
+          error: 'Invalid condition. Must be one of: excellent, good, fair, poor',
+          statusCode: 400,
+        };
+      }
+
+      // Check if copy exists
+      const copy = await this.bookRepository.getBookCopyById(copyId);
+      if (!copy) {
+        return {
+          success: false,
+          error: 'Book copy not found',
+          statusCode: 404,
+        };
+      }
+
+      // Update the copy condition
+      const updated = await this.bookRepository.updateBookCopy(copyId, { condition: condition as 'excellent' | 'good' | 'fair' | 'poor' });
+      if (!updated) {
+        return {
+          success: false,
+          error: 'Failed to update book copy condition',
+          statusCode: 500,
+        };
+      }
+
+      // Get updated copy
+      const updatedCopy = await this.bookRepository.getBookCopyById(copyId);
       return {
-        success: false,
-        error: 'Method not implemented yet',
-        statusCode: 501,
+        success: true,
+        data: updatedCopy!,
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.updateBookCopyCondition:', error);
@@ -501,11 +614,21 @@ export class BookService implements IBookService {
         };
       }
 
-      // TODO: Implement when repository method is available
+      // Check if book exists first
+      const bookExists = await this.bookRepository.bookExists(bookId);
+      if (!bookExists) {
+        return {
+          success: false,
+          error: 'Book not found',
+          statusCode: 404,
+        };
+      }
+
+      const copies = await this.bookRepository.getBookCopies(bookId);
       return {
-        success: false,
-        error: 'Method not implemented yet',
-        statusCode: 501,
+        success: true,
+        data: copies,
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.getBookCopies:', error);
@@ -527,11 +650,21 @@ export class BookService implements IBookService {
         };
       }
 
-      // TODO: Implement when repository method is available
+      // Check if book exists first
+      const bookExists = await this.bookRepository.bookExists(bookId);
+      if (!bookExists) {
+        return {
+          success: false,
+          error: 'Book not found',
+          statusCode: 404,
+        };
+      }
+
+      const availableCopies = await this.bookRepository.getAvailableBookCopies(bookId);
       return {
-        success: false,
-        error: 'Method not implemented yet',
-        statusCode: 501,
+        success: true,
+        data: availableCopies,
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.getAvailableCopies:', error);

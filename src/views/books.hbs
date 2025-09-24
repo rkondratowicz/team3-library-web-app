@@ -54,36 +54,35 @@
                  data-isbn="{{isbn}}" 
                  data-category="{{category}}"
                  data-available="{{#if available}}true{{else}}false{{/if}}">
-                <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <small class="text-muted">{{category}}</small>
-                        <span class="badge {{#if available}}bg-success{{else}}bg-warning{{/if}}">
-                            {{#if available}}Available{{else}}Checked Out{{/if}}
+                <div class="card h-100 book-preview-card">
+                    <!-- Book Image Placeholder -->
+                    <div class="book-image-container">
+                        <div class="book-image-placeholder">
+                            <i class="fas fa-book fa-3x text-muted"></i>
+                        </div>
+                        <!-- Availability Badge -->
+                        <span class="availability-badge badge {{#if available}}bg-success{{else}}bg-danger{{/if}}">
+                            {{#if available}}Available{{else}}Unavailable{{/if}}
                         </span>
                     </div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{title}}</h5>
-                        <p class="card-text">
-                            <strong>Author:</strong> {{author}}<br>
-                            <strong>ISBN:</strong> {{isbn}}<br>
-                            {{#if publishedYear}}
-                            <strong>Published:</strong> {{publishedYear}}<br>
-                            {{/if}}
-                            {{#if description}}
-                            <small class="text-muted">{{truncate description 100}}</small>
-                            {{/if}}
+                    
+                    <div class="card-body text-center">
+                        <h5 class="card-title book-title">{{title}}</h5>
+                        <p class="card-text book-author">
+                            <i class="fas fa-user"></i> {{author}}
                         </p>
                     </div>
+                    
                     <div class="card-footer">
                         <div class="btn-group w-100" role="group">
-                            <a href="/books/{{id}}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-eye"></i> View
+                            <a href="/books/{{id}}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i> View Details
                             </a>
                             <a href="/books/{{id}}/edit" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
                             <button class="btn btn-outline-danger btn-sm" onclick="deleteBook('{{id}}')">
-                                <i class="fas fa-trash"></i> Delete
+                                <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </div>

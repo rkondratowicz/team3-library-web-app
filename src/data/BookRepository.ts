@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sqlite3 from 'sqlite3';
-import type { Book, BookDbRow } from '../shared/types.js';
+import type { Book, BookDbRow, BookCopy, CreateBookCopyRequest, UpdateBookCopyRequest } from '../shared/types.js';
 
 export interface IBookRepository {
   getAllBooks(): Promise<Book[]>;
@@ -10,6 +10,15 @@ export interface IBookRepository {
   updateBook(id: string, updates: Partial<Book>): Promise<boolean>;
   deleteBook(id: string): Promise<boolean>;
   bookExists(id: string): Promise<boolean>;
+
+  // Book copy methods
+  getBookCopies(bookId: string): Promise<BookCopy[]>;
+  getBookCopyById(copyId: string): Promise<BookCopy | null>;
+  createBookCopy(bookCopy: BookCopy): Promise<void>;
+  updateBookCopy(copyId: string, updates: Partial<BookCopy>): Promise<boolean>;
+  deleteBookCopy(copyId: string): Promise<boolean>;
+  getAvailableBookCopies(bookId: string): Promise<BookCopy[]>;
+  getNextCopyNumber(bookId: string): Promise<number>;
 }
 
 export class BookRepository implements IBookRepository {
@@ -40,14 +49,16 @@ export class BookRepository implements IBookRepository {
       isbn: row.isbn,
       genre: row.genre,
       publication_year: row.publication_year,
-      description: row.description
+      description: row.description,
+      created_at: row.created_at,
+      updated_at: row.updated_at
     };
   }
 
   async getAllBooks(): Promise<Book[]> {
     return new Promise((resolve, reject) => {
       const sql = `
-        SELECT id, author, title, isbn, genre, publication_year, description 
+        SELECT id, author, title, isbn, genre, publication_year, description, created_at, updated_at 
         FROM books 
         ORDER BY title ASC
       `;
@@ -67,7 +78,7 @@ export class BookRepository implements IBookRepository {
   async getBookById(id: string): Promise<Book | null> {
     return new Promise((resolve, reject) => {
       const sql = `
-        SELECT id, author, title, isbn, genre, publication_year, description 
+        SELECT id, author, title, isbn, genre, publication_year, description, created_at, updated_at
         FROM books 
         WHERE id = ?
       `;
@@ -189,6 +200,188 @@ export class BookRepository implements IBookRepository {
           }
         },
       );
+    });
+  }
+
+  // Book Copy Methods
+
+  async getBookCopies(bookId: string): Promise<BookCopy[]> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT id, book_id, copy_number, status, condition, created_at, updated_at 
+        FROM book_copies 
+        WHERE book_id = ? 
+        ORDER BY copy_number ASC
+      `;
+
+      this.db.all(sql, [bookId], (err: Error | null, rows: any[]) => {
+        if (err) {
+          console.error('Database error:', err.message);
+          reject(err);
+        } else {
+          const copies: BookCopy[] = rows.map(row => ({
+            id: row.id,
+            book_id: row.book_id,
+            copy_number: row.copy_number,
+            status: row.status,
+            condition: row.condition,
+            created_at: row.created_at,
+            updated_at: row.updated_at
+          }));
+          resolve(copies);
+        }
+      });
+    });
+  }
+
+  async getBookCopyById(copyId: string): Promise<BookCopy | null> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT id, book_id, copy_number, status, condition, created_at, updated_at 
+        FROM book_copies 
+        WHERE id = ?
+      `;
+
+      this.db.get(sql, [copyId], (err: Error | null, row: any) => {
+        if (err) {
+          console.error('Database error:', err.message);
+          reject(err);
+        } else if (row) {
+          const copy: BookCopy = {
+            id: row.id,
+            book_id: row.book_id,
+            copy_number: row.copy_number,
+            status: row.status,
+            condition: row.condition,
+            created_at: row.created_at,
+            updated_at: row.updated_at
+          };
+          resolve(copy);
+        } else {
+          resolve(null);
+        }
+      });
+    });
+  }
+
+  async createBookCopy(bookCopy: BookCopy): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        INSERT INTO book_copies (id, book_id, copy_number, status, condition)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+
+      this.db.run(
+        sql,
+        [bookCopy.id, bookCopy.book_id, bookCopy.copy_number, bookCopy.status, bookCopy.condition],
+        function (err: Error | null) {
+          if (err) {
+            console.error('Database error:', err.message);
+            reject(err);
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
+  }
+
+  async updateBookCopy(copyId: string, updates: Partial<BookCopy>): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const updateFields: string[] = [];
+      const values: any[] = [];
+
+      if (updates.status !== undefined) {
+        updateFields.push('status = ?');
+        values.push(updates.status);
+      }
+      if (updates.condition !== undefined) {
+        updateFields.push('condition = ?');
+        values.push(updates.condition);
+      }
+
+      if (updateFields.length === 0) {
+        resolve(false);
+        return;
+      }
+
+      updateFields.push('updated_at = CURRENT_TIMESTAMP');
+      values.push(copyId);
+
+      const sql = `UPDATE book_copies SET ${updateFields.join(', ')} WHERE id = ?`;
+
+      this.db.run(sql, values, function (err: Error | null) {
+        if (err) {
+          console.error('Database error:', err.message);
+          reject(err);
+        } else {
+          resolve(this.changes > 0);
+        }
+      });
+    });
+  }
+
+  async deleteBookCopy(copyId: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const sql = 'DELETE FROM book_copies WHERE id = ?';
+
+      this.db.run(sql, [copyId], function (err: Error | null) {
+        if (err) {
+          console.error('Database error:', err.message);
+          reject(err);
+        } else {
+          resolve(this.changes > 0);
+        }
+      });
+    });
+  }
+
+  async getAvailableBookCopies(bookId: string): Promise<BookCopy[]> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT id, book_id, copy_number, status, condition, created_at, updated_at 
+        FROM book_copies 
+        WHERE book_id = ? AND status = 'available'
+        ORDER BY copy_number ASC
+      `;
+
+      this.db.all(sql, [bookId], (err: Error | null, rows: any[]) => {
+        if (err) {
+          console.error('Database error:', err.message);
+          reject(err);
+        } else {
+          const copies: BookCopy[] = rows.map(row => ({
+            id: row.id,
+            book_id: row.book_id,
+            copy_number: row.copy_number,
+            status: row.status,
+            condition: row.condition,
+            created_at: row.created_at,
+            updated_at: row.updated_at
+          }));
+          resolve(copies);
+        }
+      });
+    });
+  }
+
+  async getNextCopyNumber(bookId: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT MAX(copy_number) as max_copy_number 
+        FROM book_copies 
+        WHERE book_id = ?
+      `;
+
+      this.db.get(sql, [bookId], (err: Error | null, row: any) => {
+        if (err) {
+          console.error('Database error:', err.message);
+          reject(err);
+        } else {
+          const nextNumber = (row?.max_copy_number || 0) + 1;
+          resolve(nextNumber);
+        }
+      });
     });
   }
 

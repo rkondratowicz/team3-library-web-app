@@ -8,6 +8,8 @@ export interface Book {
   genre?: string;
   publication_year?: number;
   description?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface BookCopy {
