@@ -76,7 +76,7 @@ app.get('/', (_req: Request, res: Response<BooksResponse | ErrorResponse>) => {
       console.error('Error fetching books:', err.message);
       res.status(500).json({
         error: 'Failed to fetch books',
-        details: 'Internal server error'
+        details: 'Internal server error',
       });
       return;
     }
@@ -104,7 +104,7 @@ app.post('/books', (req: Request, res: Response<BookResponse | ErrorResponse>) =
   // Insert book into database
   const query = 'INSERT INTO books (id, author, title) VALUES (?, ?, ?)';
 
-  db.run(query, [bookId, trimmedAuthor, trimmedTitle], function (err: Error | null) {
+  db.run(query, [bookId, trimmedAuthor, trimmedTitle], (err: Error | null) => {
     if (err) {
       console.error('Error creating book:', err.message);
       res.status(500).json({
