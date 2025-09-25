@@ -77,7 +77,18 @@ app.set('views', path.join(__dirname, 'views'));
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(methodOverride('_method'));
+
+// Method override middleware for handling HTML form _method parameter
+app.use(
+  methodOverride((req, _res) => {
+    if (req.body && typeof req.body === 'object' && '_method' in req.body) {
+      // Extract method from form body and clean it up
+      const method = req.body._method;
+      delete req.body._method;
+      return method;
+    }
+  }),
+);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize layers (Dependency Injection)
