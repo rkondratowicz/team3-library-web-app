@@ -1,0 +1,28 @@
+#!/bin/sh
+# Pre-commit hook to run Biome checks and formatting
+
+echo "Running Biome checks..."
+
+# Run Biome format check
+npm run format:check
+if [ $? -ne 0 ]; then
+  echo "❌ Formatting issues found. Run 'npm run format' to fix them."
+  exit 1
+fi
+
+# Run Biome lint check
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ Linting issues found. Run 'npm run lint:fix' to fix them."
+  exit 1
+fi
+
+# Run full Biome check
+npm run check
+if [ $? -ne 0 ]; then
+  echo "❌ Code quality issues found. Run 'npm run check:fix' to fix them."
+  exit 1
+fi
+
+echo "✅ All Biome checks passed!"
+exit 0

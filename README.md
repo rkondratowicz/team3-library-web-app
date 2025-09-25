@@ -54,11 +54,52 @@ The project is configured with:
 - TypeScript-specific linting rules
 - Node.js import protocol enforcement
 
+### Pre-commit Hooks
+
+The project includes a pre-commit hook that runs all code quality checks. To install it:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+This ensures code quality standards are maintained on every commit.
+
+### GitHub Actions
+
+The project includes a GitHub Actions workflow (`.github/workflows/code-quality.yml`) that runs on:
+- All pushes to `main` and `develop` branches
+- All pull requests to `main` and `develop` branches
+
+This prevents code quality issues from being merged.
+
 ## API Endpoints
 
-- `GET /` - Returns a list of books
-- `POST /books` - Creates a new book
-- `GET /greet?q=name` - Returns a greeting message
+### Books
+- `GET /api/books` - Get all books
+- `GET /api/books/:id` - Get book by ID
+- `POST /api/books` - Create a new book
+- `PUT /api/books/:id` - Update a book
+- `DELETE /api/books/:id` - Delete a book
+
+### Members  
+- `GET /api/members` - Get all members
+- `GET /api/members/:id` - Get member by ID
+- `POST /api/members` - Create a new member
+- `PUT /api/members/:id` - Update a member
+- `DELETE /api/members/:id` - Delete a member
+
+### Authentication
+- `POST /api/auth/login` - Member login with username/password
+- `POST /api/auth/set-password` - Set member password
+- `POST /api/auth/logout` - Logout member
+- `GET /api/auth/session` - Check session status
+
+### Web Interface
+- `GET /` - Home page
+- `GET /books` - Books listing page
+- `GET /members` - Members listing page
+- `GET /login` - Login page
+- `GET /account` - Member account page
 
 ## Project Structure
 

@@ -1,4 +1,5 @@
 import express from 'express';
+import type { AuthController } from './AuthController.js';
 import type { BookController } from './BookController.js';
 import type { MemberController } from './MemberController.js';
 
@@ -71,6 +72,24 @@ export function createMemberFormRoutes(memberController: MemberController): expr
 
   // DELETE /form/members/:id - Delete member from form
   router.delete('/:id', memberController.deleteMemberFromForm);
+
+  return router;
+}
+
+export function createAuthRoutes(authController: AuthController): express.Router {
+  const router = express.Router();
+
+  // POST /auth/login - Member login
+  router.post('/login', authController.login);
+
+  // POST /auth/set-password - Set member password
+  router.post('/set-password', authController.setPassword);
+
+  // POST /auth/logout - Member logout
+  router.post('/logout', authController.logout);
+
+  // GET /auth/session - Check session status
+  router.get('/session', authController.checkSession);
 
   return router;
 }

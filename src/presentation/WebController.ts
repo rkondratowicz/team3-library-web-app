@@ -383,4 +383,56 @@ export class WebController {
       });
     }
   };
+
+  // GET /login - Login form
+  loginForm = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      res.render('login', {
+        title: 'Member Login',
+        layout: 'main',
+      });
+    } catch (error) {
+      console.error('Error in WebController.loginForm:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to load login form',
+        details: 'Internal server error',
+      });
+    }
+  };
+
+  // GET /account - Member account page
+  memberAccount = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      // For now, we'll show a placeholder. In a real app, you'd get the member from session
+      res.render('account', {
+        title: 'My Account',
+        layout: 'main',
+      });
+    } catch (error) {
+      console.error('Error in WebController.memberAccount:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to load account page',
+        details: 'Internal server error',
+      });
+    }
+  };
+
+  // GET /set-password - Set password form
+  setPasswordForm = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      res.render('set-password', {
+        title: 'Set Password',
+        layout: 'main',
+      });
+    } catch (error) {
+      console.error('Error in WebController.setPasswordForm:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to load set password form',
+        details: 'Internal server error',
+      });
+    }
+  };
 }
