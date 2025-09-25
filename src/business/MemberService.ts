@@ -1,6 +1,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sqlite3 from 'sqlite3';
+import { v4 as uuidv4 } from 'uuid';
 import type { Member } from '../shared/types.js';
 
 export interface IMemberService {
@@ -306,7 +307,7 @@ export class MemberService implements IMemberService {
    * Generate a unique ID for new members
    */
   private generateId(): string {
-    return `member_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    return uuidv4();
   }
 
   /**
