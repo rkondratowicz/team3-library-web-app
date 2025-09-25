@@ -17,7 +17,7 @@ CREATE INDEX idx_members_name ON members(memberName);
 
 -- Create trigger to automatically update the updated_at timestamp
 CREATE TRIGGER update_members_timestamp 
-    AFTER UPDATE ON members
+    BEFORE UPDATE ON members
     FOR EACH ROW
     BEGIN
         UPDATE members SET updated_at = CURRENT_TIMESTAMP WHERE ID = NEW.ID;

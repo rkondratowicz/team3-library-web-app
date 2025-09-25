@@ -202,14 +202,21 @@ export class MemberService implements IMemberService {
    */
   async updateMember(
     id: string,
-    memberData: { memberName?: string; email?: string; phone?: string; memAddress?: string },
+    memberData: {
+      memberName?: string;
+      email?: string;
+      phone?: string;
+      memAddress?: string;
+      status?: string;
+      max_books?: number;
+    },
   ): Promise<{ success: boolean; data?: Member; error?: string }> {
     if (!id) {
       return { success: false, error: 'Member ID is required' };
     }
 
     const updateFields: string[] = [];
-    const params: (string | null)[] = [];
+    const params: (string | null | number)[] = [];
 
     if (memberData.memberName !== undefined) {
       if (!memberData.memberName.trim()) {
@@ -232,6 +239,16 @@ export class MemberService implements IMemberService {
     if (memberData.memAddress !== undefined) {
       updateFields.push('memAddress = ?');
       params.push(memberData.memAddress);
+    }
+
+    if (memberData.status !== undefined) {
+      updateFields.push('status = ?');
+      params.push(memberData.status);
+    }
+
+    if (memberData.max_books !== undefined) {
+      updateFields.push('max_books = ?');
+      params.push(memberData.max_books);
     }
 
     if (updateFields.length === 0) {
