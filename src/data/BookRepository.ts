@@ -57,6 +57,7 @@ export class BookRepository implements IBookRepository {
 
   async getAllBooks(): Promise<Book[]> {
     return new Promise((resolve, reject) => {
+
       const sql = `
         SELECT id, author, title, isbn, genre, publication_year, description, created_at, updated_at 
         FROM books 
@@ -72,11 +73,13 @@ export class BookRepository implements IBookRepository {
           resolve(books);
         }
       });
+
     });
   }
 
   async getBookById(id: string): Promise<Book | null> {
     return new Promise((resolve, reject) => {
+
       const sql = `
         SELECT id, author, title, isbn, genre, publication_year, description, created_at, updated_at
         FROM books 
@@ -94,6 +97,7 @@ export class BookRepository implements IBookRepository {
           resolve(null);
         }
       });
+
     });
   }
 
