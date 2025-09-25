@@ -1,0 +1,307 @@
+{{#> layouts/main title=title}}
+
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item"><a href="/members">Members</a></li>
+          <li class="breadcrumb-item active" aria-current="page">
+            {{#if isEdit}}Edit{{else}}Add New{{/if}} Member
+          </li>
+        </ol>
+      </nav>
+      
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h2 mb-0">
+          {{#if isEdit}}
+            Edit Member: {{member.memberName}}
+          {{else}}
+            Add New Member
+          {{/if}}
+        </h1>
+        <a href="/members" class="btn btn-secondary">
+          <i class="bi bi-arrow-left"></i> Back to Members
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Member Form -->
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-person{{#if isEdit}}-gear{{else}}-plus{{/if}}"></i>
+            Member Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <form 
+            method="POST" 
+            action="{{#if isEdit}}/api/members/{{member.id}}{{else}}/api/members{{/if}}" 
+            id="memberForm"
+            novalidate
+          >
+            {{#if isEdit}}
+            <input type="hidden" name="_method" value="PUT">
+            {{/if}}
+            
+            <!-- Name Field -->
+            <div class="mb-3">
+              <label for="memberName" class="form-label">
+                Full Name <span class="text-danger">*</span>
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="memberName" 
+                name="memberName" 
+                value="{{#if member}}{{member.memberName}}{{/if}}"
+                required
+                maxlength="255"
+                placeholder="Enter member's full name"
+              >
+              <div class="invalid-feedback">
+                Please provide a valid member name.
+              </div>
+            </div>
+
+            <!-- Email Field -->
+            <div class="mb-3">
+              <label for="email" class="form-label">
+                Email Address <span class="text-danger">*</span>
+              </label>
+              <input 
+                type="email" 
+                class="form-control" 
+                id="email" 
+                name="email" 
+                value="{{#if member}}{{member.email}}{{/if}}"
+                required
+                maxlength="255"
+                placeholder="Enter email address"
+              >
+              <div class="invalid-feedback">
+                Please provide a valid email address.
+              </div>
+              <div class="form-text">
+                Email must contain an @ symbol and be unique.
+              </div>
+            </div>
+
+            <!-- Phone Field -->
+            <div class="mb-3">
+              <label for="phone" class="form-label">
+                Phone Number
+              </label>
+              <input 
+                type="tel" 
+                class="form-control" 
+                id="phone" 
+                name="phone" 
+                value="{{#if member}}{{member.phone}}{{/if}}"
+                maxlength="20"
+                placeholder="Enter phone number (optional)"
+              >
+              <div class="form-text">
+                Optional. Format: (555) 123-4567 or 555-123-4567
+              </div>
+            </div>
+
+            <!-- Address Field -->
+            <div class="mb-3">
+              <label for="memAddress" class="form-label">
+                Address
+              </label>
+              <textarea 
+                class="form-control" 
+                id="memAddress" 
+                name="memAddress" 
+                rows="3"
+                placeholder="Enter full address (optional)"
+              >{{#if member}}{{member.memAddress}}{{/if}}</textarea>
+              <div class="form-text">
+                Optional. Full street address including city, state, and zip code.
+              </div>
+            </div>
+
+            <!-- Additional Information (if editing) -->
+            {{#if isEdit}}
+            <hr>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label text-muted">Current Status</label>
+                <div>
+                  <span class="badge bg-{{#if (eq member.status 'active')}}success{{else if (eq member.status 'suspended')}}warning{{else}}secondary{{/if}}">
+                    {{member.status}}
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label text-muted">Max Books</label>
+                <div class="fw-bold">{{member.max_books}}</div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label text-muted">Member Since</label>
+                <div class="fw-bold">{{formatDate member.member_since}}</div>
+              </div>
+            </div>
+            {{/if}}
+
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between pt-3 border-top">
+              <div>
+                <a href="/members" class="btn btn-outline-secondary">
+                  <i class="bi bi-x-circle"></i> Cancel
+                </a>
+              </div>
+              <div>
+                {{#if isEdit}}
+                <button type="button" class="btn btn-outline-danger me-2" onclick="confirmDelete()">
+                  <i class="bi bi-trash"></i> Delete
+                </button>
+                {{/if}}
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-check-circle"></i>
+                  {{#if isEdit}}Update Member{{else}}Add Member{{/if}}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Form Tips -->
+      <div class="card mt-4 bg-light">
+        <div class="card-body">
+          <h6 class="card-title">
+            <i class="bi bi-lightbulb"></i> Tips
+          </h6>
+          <ul class="mb-0 small">
+            <li><strong>Required fields</strong> are marked with a red asterisk (*)</li>
+            <li><strong>Email addresses</strong> must be unique and contain an @ symbol</li>
+            <li><strong>Phone numbers</strong> can be in any format but are recommended to include area code</li>
+            <li><strong>Addresses</strong> help with member communication and book delivery</li>
+            {{#if isEdit}}
+            <li><strong>Member status and limits</strong> are managed by library administrators</li>
+            {{/if}}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Bootstrap Icons if not already included -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+{{#if isEdit}}
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete the member <strong>{{member.memberName}}</strong>?</p>
+        <p class="text-danger"><i class="bi bi-exclamation-triangle"></i> This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="POST" action="/api/members/{{member.id}}" style="display: inline;">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Delete Member
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{/if}}
+
+<!-- Form Validation and Enhancement JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('memberForm');
+    const nameInput = document.getElementById('memberName');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+    
+    // Focus on name field
+    if (nameInput && !nameInput.value) {
+        nameInput.focus();
+    }
+    
+    // Form validation
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+    }, false);
+    
+    // Real-time email validation
+    emailInput.addEventListener('input', function() {
+        const email = this.value;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (email && !emailPattern.test(email)) {
+            this.setCustomValidity('Please enter a valid email address with @ symbol');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+    
+    // Phone number formatting (optional)
+    phoneInput.addEventListener('input', function() {
+        let value = this.value.replace(/\D/g, ''); // Remove non-digits
+        
+        if (value.length >= 6) {
+            if (value.length <= 10) {
+                value = value.replace(/(\d{3})(\d{3})(\d{0,4})/, '($1) $2-$3');
+            } else {
+                value = value.substring(0, 10);
+                value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+            }
+            this.value = value;
+        }
+    });
+    
+    // Character counters
+    function updateCharCount(input, maxLength) {
+        const remaining = maxLength - input.value.length;
+        let counter = input.parentNode.querySelector('.char-counter');
+        
+        if (!counter) {
+            counter = document.createElement('div');
+            counter.className = 'char-counter form-text text-end';
+            input.parentNode.appendChild(counter);
+        }
+        
+        counter.textContent = `${input.value.length}/${maxLength}`;
+        counter.style.color = remaining < 20 ? '#dc3545' : '#6c757d';
+    }
+    
+    nameInput.addEventListener('input', () => updateCharCount(nameInput, 255));
+    emailInput.addEventListener('input', () => updateCharCount(emailInput, 255));
+    phoneInput.addEventListener('input', () => updateCharCount(phoneInput, 20));
+});
+
+{{#if isEdit}}
+function confirmDelete() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+{{/if}}
+</script>
+
+{{/layouts/main}}

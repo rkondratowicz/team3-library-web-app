@@ -1,8 +1,10 @@
 import type { Request, Response } from 'express';
 import type { IBookService } from '../business/BookService.js';
+import type { IMemberService } from '../business/MemberService.js';
+import type { Member } from '../shared/types.js';
 
 export class WebController {
-  constructor(private bookService: IBookService) {}
+  constructor(private bookService: IBookService, private memberService?: IMemberService) {}
 
   // GET / - Home page
   home = async (_req: Request, res: Response): Promise<void> => {
@@ -123,6 +125,144 @@ export class WebController {
       res.status(500).render('error', {
         title: 'Error',
         error: 'Failed to load book for editing',
+        details: 'Internal server error',
+      });
+    }
+  };
+
+  // GET /members - Members list page with search
+  members = async (req: Request, res: Response): Promise<void> => {
+    if (!this.memberService) {
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Member service not available',
+        details: 'Member functionality is not configured',
+      });
+      return;
+    }
+
+    try {
+      const searchTerm = req.query.search as string;
+      let result: { success: boolean; data?: Member[]; error?: string };
+      
+      if (searchTerm?.trim()) {
+        result = await this.memberService.searchMembers(searchTerm);
+      } else {
+        result = await this.memberService.getAllMembers();
+      }
+
+      if (result.success && result.data) {
+        res.render('members', {
+          title: searchTerm ? `Members - Search: "${searchTerm}"` : 'Members',
+          members: result.data,
+          searchTerm: searchTerm || '',
+          resultCount: result.data.length,
+          isSearchResult: !!searchTerm,
+        });
+      } else {
+        res.status(500).render('error', {
+          title: 'Error',
+          error: 'Failed to load members',
+          details: result.error || 'Unknown error',
+        });
+      }
+    } catch (error) {
+      console.error('Error in WebController.members:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to load members page',
+        details: 'Internal server error',
+      });
+    }
+  };
+
+  // GET /members/add - Add member form
+  addMemberForm = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      res.render('member-form', {
+        title: 'Add New Member',
+        isEdit: false,
+      });
+    } catch (error) {
+      console.error('Error in WebController.addMemberForm:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to load add member form',
+        details: 'Internal server error',
+      });
+    }
+  };
+
+  // GET /members/:id - Member details page
+  memberDetails = async (req: Request, res: Response): Promise<void> => {
+    if (!this.memberService) {
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Member service not available',
+        details: 'Member functionality is not configured',
+      });
+      return;
+    }
+
+    try {
+      const { id } = req.params;
+      const result = await this.memberService.getMemberById(id);
+
+      if (result.success && result.data) {
+        res.render('member-details', {
+          title: `Member - ${result.data.memberName}`,
+          member: result.data,
+        });
+      } else {
+        res.status(404).render('error', {
+          title: 'Member Not Found',
+          error: 'Member not found',
+          details: result.error || 'The requested member does not exist',
+        });
+      }
+    } catch (error) {
+      console.error('Error in WebController.memberDetails:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to load member details',
+        details: 'Internal server error',
+      });
+    }
+  };
+
+  // GET /members/:id/edit - Edit member form
+  editMemberForm = async (req: Request, res: Response): Promise<void> => {
+    if (!this.memberService) {
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Member service not available',
+        details: 'Member functionality is not configured',
+      });
+      return;
+    }
+
+    try {
+      const { id } = req.params;
+      const result = await this.memberService.getMemberById(id);
+
+      if (result.success && result.data) {
+        res.render('member-form', {
+          title: `Edit Member - ${result.data.memberName}`,
+          member: result.data,
+          isEdit: true,
+        });
+      } else {
+        res.status(404).render('error', {
+          title: 'Member Not Found',
+          error: 'Member not found',
+          details: result.error || 'The requested member does not exist',
+        });
+      }
+    } catch (error) {
+      console.error('Error in WebController.editMemberForm:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to load member for editing',
         details: 'Internal server error',
       });
     }
