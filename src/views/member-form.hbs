@@ -42,7 +42,7 @@
         <div class="card-body">
           <form 
             method="POST" 
-            action="{{#if isEdit}}/api/members/{{member.id}}{{else}}/api/members{{/if}}" 
+            action="{{#if isEdit}}/api/form/members/{{member.id}}{{else}}/api/form/members{{/if}}" 
             id="memberForm"
             novalidate
           >
@@ -214,7 +214,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <form method="POST" action="/api/members/{{member.id}}" style="display: inline;">
+        <form method="POST" action="/api/form/members/{{member.id}}" style="display: inline;">
           <input type="hidden" name="_method" value="DELETE">
           <button type="submit" class="btn btn-danger">
             <i class="bi bi-trash"></i> Delete Member

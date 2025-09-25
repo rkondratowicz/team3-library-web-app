@@ -10,7 +10,8 @@ import { MemberService } from './business/MemberService.js';
 import { BookRepository } from './data/BookRepository.js';
 import { BookController } from './presentation/BookController.js';
 import { HealthController } from './presentation/HealthController.js';
-import { createBookRoutes } from './presentation/routes.js';
+import { MemberController } from './presentation/MemberController.js';
+import { createBookRoutes, createMemberFormRoutes, createMemberRoutes } from './presentation/routes.js';
 import { WebController } from './presentation/WebController.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +28,7 @@ const hbs = create({
   partialsDir: path.join(__dirname, 'views/partials'),
   helpers: {
     eq: (a: unknown, b: unknown) => a === b,
+    gt: (a: unknown, b: unknown) => Number(a) > Number(b),
     truncate: (str: string, length: number) => {
       if (!str || str.length <= length) return str;
       return `${str.substring(0, length)}...`;
@@ -55,78 +57,16 @@ const bookService = new BookService(bookRepository);
 const bookController = new BookController(bookService);
 
 const memberService = new MemberService();
+const memberController = new MemberController(memberService);
 const webController = new WebController(bookService, memberService);
 const healthController = new HealthController();
 
 // API Routes (with /api prefix)
 app.use('/api/books', createBookRoutes(bookController));
+app.use('/api/members', createMemberRoutes(memberController));
 
-// Member API routes for form handling
-app.post('/api/members', async (req, res) => {
-  try {
-    const result = await memberService.createMember(req.body);
-    if (result.success) {
-      res.redirect('/members');
-    } else {
-      res.status(400).render('error', {
-        title: 'Error',
-        error: 'Failed to create member',
-        details: result.error || 'Unknown error',
-      });
-    }
-  } catch (error) {
-    console.error('Error creating member:', error);
-    res.status(500).render('error', {
-      title: 'Error',
-      error: 'Failed to create member',
-      details: 'Internal server error',
-    });
-  }
-});
-
-app.put('/api/members/:id', async (req, res) => {
-  try {
-    const result = await memberService.updateMember(req.params.id, req.body);
-    if (result.success) {
-      res.redirect(`/members/${req.params.id}`);
-    } else {
-      res.status(400).render('error', {
-        title: 'Error',
-        error: 'Failed to update member',
-        details: result.error || 'Unknown error',
-      });
-    }
-  } catch (error) {
-    console.error('Error updating member:', error);
-    res.status(500).render('error', {
-      title: 'Error',
-      error: 'Failed to update member',
-      details: 'Internal server error',
-    });
-  }
-});
-
-app.delete('/api/members/:id', async (req, res) => {
-  try {
-    const result = await memberService.deleteMember(req.params.id);
-    if (result.success) {
-      res.redirect('/members');
-    } else {
-      res.status(400).render('error', {
-        title: 'Error',
-        error: 'Failed to delete member',
-        details: result.error || 'Unknown error',
-      });
-    }
-  } catch (error) {
-    console.error('Error deleting member:', error);
-    res.status(500).render('error', {
-      title: 'Error',
-      error: 'Failed to delete member',
-      details: 'Internal server error',
-    });
-  }
-});
+// Form handling routes (for web application forms with redirects)
+app.use('/api/form/members', createMemberFormRoutes(memberController));
 
 app.get('/api/health', healthController.healthCheck);
 app.get('/api/greet', healthController.greet);
