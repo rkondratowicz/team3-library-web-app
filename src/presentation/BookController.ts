@@ -16,7 +16,7 @@ import type {
 } from '../shared/types.js';
 
 export class BookController {
-  constructor(private bookService: IBookService) { }
+  constructor(private bookService: IBookService) {}
 
   // GET /books - Get all books
   getAllBooks = async (

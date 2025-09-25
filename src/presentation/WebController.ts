@@ -3,7 +3,7 @@ import type { IBookService } from '../business/BookService.js';
 import type { Book } from '../shared/types.js';
 
 export class WebController {
-  constructor(private bookService: IBookService) { }
+  constructor(private bookService: IBookService) {}
 
   // Helper method to convert book data for template rendering
   private mapBookForTemplate(book: Book) {
