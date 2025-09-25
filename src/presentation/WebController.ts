@@ -4,7 +4,6 @@ import type { IBookService } from '../business/BookService.js';
 import type { IMemberService } from '../business/MemberService.js';
 import type { Book, Member } from '../shared/types.js';
 
-
 export class WebController {
   constructor(
     private bookService: IBookService,

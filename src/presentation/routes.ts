@@ -34,7 +34,6 @@ export function createBookRoutes(bookController: BookController): express.Router
   return router;
 }
 
-
 export function createMemberRoutes(memberController: MemberController): express.Router {
   const router = express.Router();
 
@@ -72,7 +71,6 @@ export function createMemberFormRoutes(memberController: MemberController): expr
 
   // DELETE /form/members/:id - Delete member from form
   router.delete('/:id', memberController.deleteMemberFromForm);
-
 
   return router;
 }
