@@ -139,6 +139,73 @@ export interface GreetingResponse {
   message: string;
 }
 
+// Member interfaces
+export interface Member {
+  id: string;
+  memberName: string;
+  email: string;
+  phone?: string;
+  memAddress?: string;
+  status?: 'active' | 'suspended' | 'inactive';
+  max_books?: number;
+  member_since?: string;
+  updated_at?: string;
+}
+
+export interface CreateMemberRequest {
+  memberName: string;
+  email: string;
+  phone?: string;
+  memAddress?: string;
+  max_books?: number;
+}
+
+export interface UpdateMemberRequest {
+  memberName?: string;
+  email?: string;
+  phone?: string;
+  memAddress?: string;
+  status?: 'active' | 'suspended' | 'inactive';
+  max_books?: number;
+}
+
+// Member search functionality
+export interface MemberSearchFilters {
+  name?: string;
+  email?: string;
+  phone?: string;
+  status?: 'active' | 'suspended' | 'inactive';
+  memberSince?: string;
+}
+
+export interface MemberSearchRequest {
+  query?: string; // General search term
+  filters?: MemberSearchFilters;
+  sortBy?: 'memberName' | 'email' | 'member_since' | 'status';
+  sortOrder?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
+export interface MemberResponse {
+  member: Member;
+}
+
+export interface MembersResponse {
+  members: Member[];
+  total?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface MemberSearchResponse {
+  members: Member[];
+  total: number;
+  query?: string;
+  filters?: MemberSearchFilters;
+  hasMore: boolean;
+}
+
 // Business layer result type
 export interface BusinessResult<T> {
   success: boolean;

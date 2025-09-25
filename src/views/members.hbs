@@ -1,0 +1,197 @@
+{{#> layouts/main title=title}}
+
+<div class="container-fluid py-4">
+  <!-- Header with Search -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h2 mb-0">
+          {{#if isSearchResult}}
+            Search Results
+          {{else}}
+            All Members
+          {{/if}}
+        </h1>
+        <a href="/members/add" class="btn btn-primary">
+          <i class="bi bi-plus-circle"></i> Add New Member
+        </a>
+      </div>
+
+      <!-- Search Form -->
+      <form method="GET" action="/members" class="mb-3">
+        <div class="input-group">
+          <input 
+            type="text" 
+            class="form-control" 
+            name="search" 
+            value="{{searchTerm}}" 
+            placeholder="Search members by name, email, or phone..."
+            aria-label="Search members"
+          >
+          <button class="btn btn-outline-secondary" type="submit">
+            <i class="bi bi-search"></i> Search
+          </button>
+          {{#if searchTerm}}
+          <a href="/members" class="btn btn-outline-danger">
+            <i class="bi bi-x-circle"></i> Clear
+          </a>
+          {{/if}}
+        </div>
+      </form>
+
+      <!-- Search Info -->
+      {{#if isSearchResult}}
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        Found <strong>{{resultCount}}</strong> member(s) matching "<strong>{{searchTerm}}</strong>"
+      </div>
+      {{else}}
+      <p class="text-muted">
+        Total: <strong>{{resultCount}}</strong> members
+      </p>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Members List -->
+  <div class="row">
+    {{#if members}}
+      {{#if (eq members.length 0)}}
+        <div class="col-12">
+          <div class="alert alert-warning text-center">
+            <i class="bi bi-exclamation-triangle"></i>
+            {{#if isSearchResult}}
+              No members found matching your search criteria.
+            {{else}}
+              No members found in the library.
+            {{/if}}
+          </div>
+        </div>
+      {{else}}
+        {{#each members}}
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="card-title mb-0">{{memberName}}</h5>
+                <span class="badge bg-{{#if (eq status 'active')}}success{{else if (eq status 'suspended')}}warning{{else}}secondary{{/if}}">
+                  {{status}}
+                </span>
+              </div>
+              
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="bi bi-envelope"></i> {{email}}
+                </small>
+              </div>
+              
+              {{#if phone}}
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="bi bi-telephone"></i> {{phone}}
+                </small>
+              </div>
+              {{/if}}
+              
+              {{#if memAddress}}
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="bi bi-geo-alt"></i> {{truncate memAddress 40}}
+                </small>
+              </div>
+              {{/if}}
+
+              <div class="row text-center mt-3 pt-3 border-top">
+                <div class="col-6">
+                  <small class="text-muted">Max Books</small>
+                  <div class="fw-bold">{{max_books}}</div>
+                </div>
+                <div class="col-6">
+                  <small class="text-muted">Member Since</small>
+                  <div class="fw-bold">{{formatDate member_since}}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card-footer bg-transparent">
+              <div class="d-flex gap-2">
+                <a href="/members/{{id}}" class="btn btn-outline-primary btn-sm flex-fill">
+                  <i class="bi bi-eye"></i> View
+                </a>
+                <a href="/members/{{id}}/edit" class="btn btn-outline-secondary btn-sm flex-fill">
+                  <i class="bi bi-pencil"></i> Edit
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {{/each}}
+      {{/if}}
+    {{else}}
+      <div class="col-12">
+        <div class="alert alert-danger text-center">
+          <i class="bi bi-exclamation-circle"></i>
+          Failed to load members. Please try again later.
+        </div>
+      </div>
+    {{/if}}
+  </div>
+
+  <!-- Quick Actions -->
+  {{#if members}}
+  {{#if (gt members.length 0)}}
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card bg-light">
+        <div class="card-body">
+          <h6 class="card-title">Quick Actions</h6>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="/members/add" class="btn btn-sm btn-primary">Add New Member</a>
+            {{#unless isSearchResult}}
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.querySelector('input[name=search]').focus()">
+              Search Members
+            </button>
+            {{/unless}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+  {{/if}}
+</div>
+
+<!-- Add Bootstrap Icons if not already included -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<!-- Custom JavaScript for enhanced search -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="search"]');
+    const searchForm = searchInput?.closest('form');
+    
+    // Auto-submit search after user stops typing (debounced)
+    let searchTimeout;
+    if (searchInput && searchForm) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.length >= 2 || this.value.length === 0) {
+                    searchForm.submit();
+                }
+            }, 500);
+        });
+    }
+    
+    // Focus search input on page load if no results
+    const isSearchResult = {{#if isSearchResult}}true{{else}}false{{/if}};
+    const hasResults = {{#if members}}{{members.length}}{{else}}0{{/if}} > 0;
+    
+    if (isSearchResult && !hasResults && searchInput) {
+        searchInput.focus();
+        searchInput.select();
+    }
+});
+</script>
+
+{{/layouts/main}}

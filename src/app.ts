@@ -1,12 +1,22 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import express from 'express';
 import { create } from 'express-handlebars';
+import methodOverride from 'method-override';
+
 import { BookService } from './business/BookService.js';
+import { MemberService } from './business/MemberService.js';
 import { BookRepository } from './data/BookRepository.js';
 import { BookController } from './presentation/BookController.js';
 import { HealthController } from './presentation/HealthController.js';
-import { createBookRoutes, createCopyRoutes } from './presentation/routes.js';
+
+import { MemberController } from './presentation/MemberController.js';
+import {
+  createBookRoutes,
+  createMemberFormRoutes,
+  createMemberRoutes,
+} from './presentation/routes.js';
 import { WebController } from './presentation/WebController.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,6 +33,7 @@ const hbs = create({
   partialsDir: path.join(__dirname, 'views/partials'),
   helpers: {
     eq: (a: unknown, b: unknown) => a === b,
+    gt: (a: unknown, b: unknown) => Number(a) > Number(b),
     truncate: (str: string, length: number) => {
       if (!str || str.length <= length) return str;
       return `${str.substring(0, length)}...`;
@@ -66,18 +77,27 @@ app.set('views', path.join(__dirname, 'views'));
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize layers (Dependency Injection)
 const bookRepository = new BookRepository();
 const bookService = new BookService(bookRepository);
 const bookController = new BookController(bookService);
-const webController = new WebController(bookService);
+
+const memberService = new MemberService();
+const memberController = new MemberController(memberService);
+const webController = new WebController(bookService, memberService);
 const healthController = new HealthController();
 
 // API Routes (with /api prefix)
 app.use('/api/books', createBookRoutes(bookController));
-app.use('/api/copies', createCopyRoutes(bookController));
+
+app.use('/api/members', createMemberRoutes(memberController));
+
+// Form handling routes (for web application forms with redirects)
+app.use('/api/form/members', createMemberFormRoutes(memberController));
+
 app.get('/api/health', healthController.healthCheck);
 app.get('/api/greet', healthController.greet);
 
@@ -87,6 +107,12 @@ app.get('/books', webController.books);
 app.get('/books/add', webController.addBookForm);
 app.get('/books/:id', webController.bookDetails);
 app.get('/books/:id/edit', webController.editBookForm);
+
+// Member Web Routes
+app.get('/members', webController.members);
+app.get('/members/add', webController.addMemberForm);
+app.get('/members/:id', webController.memberDetails);
+app.get('/members/:id/edit', webController.editMemberForm);
 
 // Global error handler
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -130,12 +156,14 @@ app.use((req, res) => {
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully...');
   bookRepository.close();
+  memberService.close();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully...');
   bookRepository.close();
+  memberService.close();
   process.exit(0);
 });
 
