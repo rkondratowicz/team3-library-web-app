@@ -462,6 +462,12 @@ function setupEventListeners() {
   });
 }
 
+// Global function to delete book (called from HTML)
+// biome-ignore lint/correctness/noUnusedVariables: Function is called from HTML template
+function deleteBook(bookId) {
+  _deleteBook(bookId);
+}
+
 // Global error handler
 window.addEventListener('error', (e) => {
   console.error('JavaScript error:', e.error);
