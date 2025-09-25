@@ -1,6 +1,6 @@
--- This migration has been superseded by 04-fix-books-schema.sql
+-- This migration has been superseded by 05-fix-books-schema.sql
 -- The ALTER TABLE approach caused schema formatting issues
--- Please use the complete schema recreation in migration 04 instead
+-- Please use the complete schema recreation in migration 05 instead
 
 -- DEPRECATED: Do not run this migration
 -- ALTER TABLE books ADD COLUMN isbn VARCHAR(13);
