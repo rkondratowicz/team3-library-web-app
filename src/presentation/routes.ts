@@ -31,6 +31,9 @@ export function createBookRoutes(bookController: BookController): express.Router
   router.put('/:id', bookController.updateBook);
   router.delete('/:id', bookController.deleteBook);
 
+  // Checkout route
+  router.post('/:id/checkout', bookController.checkoutBook);
+
   return router;
 }
 

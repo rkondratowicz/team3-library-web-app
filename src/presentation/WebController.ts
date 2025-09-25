@@ -383,4 +383,99 @@ export class WebController {
       });
     }
   };
+
+  // GET /books/:id/checkout - Member selection page for checkout
+  memberSelectionForCheckout = async (req: Request, res: Response): Promise<void> => {
+    if (!this.memberService) {
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Member service not available',
+        details: 'Member functionality is not configured',
+      });
+      return;
+    }
+
+    try {
+      const { id: bookId } = req.params;
+      const { search: searchTerm } = req.query;
+
+      // Get book information first
+      const bookResult = await this.bookService.getBookById(bookId);
+      if (!bookResult.success || !bookResult.data) {
+        res.status(404).render('error', {
+          title: 'Book Not Found',
+          error: 'Book not found',
+          details: 'The requested book could not be found.',
+        });
+        return;
+      }
+
+      const book = bookResult.data;
+
+      // Get copy information for this book
+      const copiesResult = await this.bookService.getBookCopies(book.id);
+      const availableCopiesResult = await this.bookService.getAvailableCopies(book.id);
+
+      const totalCopies = copiesResult.success && copiesResult.data ? copiesResult.data.length : 0;
+      const availableCopies = availableCopiesResult.success && availableCopiesResult.data
+        ? availableCopiesResult.data.length
+        : 0;
+
+      // Check if book is available for checkout
+      if (availableCopies === 0) {
+        res.status(400).render('error', {
+          title: 'Book Not Available',
+          error: 'Book not available for checkout',
+          details: 'All copies of this book are currently checked out or under maintenance.',
+        });
+        return;
+      }
+
+      const bookWithCopyInfo = {
+        ...this.mapBookForTemplate(book),
+        available: availableCopies > 0,
+        totalCopies,
+        availableCopies,
+      };
+
+      // Get members (active only for checkout)
+      let memberResult;
+      if (searchTerm && typeof searchTerm === 'string') {
+        memberResult = await this.memberService.searchMembers(searchTerm);
+      } else {
+        memberResult = await this.memberService.getAllMembers();
+      }
+
+      if (memberResult.success && memberResult.data) {
+        // Filter to show only active members for checkout
+        const activeMembers = memberResult.data.filter(member => member.status === 'active');
+        
+        // Log for debugging
+        console.log(`Checkout - Book: ${book.title} (${availableCopies} available), Members: ${activeMembers.length} active`);
+        
+        res.render('member-selection', {
+          title: `Checkout - ${book.title}`,
+          book: bookWithCopyInfo,
+          members: activeMembers,
+          searchTerm: searchTerm || '',
+          isSearchResult: !!searchTerm,
+          resultCount: activeMembers.length,
+        });
+      } else {
+        console.error('Failed to load members for checkout:', memberResult.error);
+        res.status(500).render('error', {
+          title: 'Error',
+          error: 'Failed to load members',
+          details: memberResult.error || 'Internal server error',
+        });
+      }
+    } catch (error) {
+      console.error('Error in WebController.memberSelectionForCheckout:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to load checkout page',
+        details: 'Internal server error',
+      });
+    }
+  };
 }

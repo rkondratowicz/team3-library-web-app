@@ -116,6 +116,7 @@ app.get('/api/greet', healthController.greet);
 app.get('/', webController.home);
 app.get('/books', webController.books);
 app.get('/books/add', webController.addBookForm);
+app.get('/books/:id/checkout', webController.memberSelectionForCheckout);
 app.get('/books/:id', webController.bookDetails);
 app.get('/books/:id/edit', webController.editBookForm);
 
