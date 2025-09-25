@@ -7,15 +7,19 @@ import methodOverride from 'method-override';
 
 import { BookService } from './business/BookService.js';
 import { MemberService } from './business/MemberService.js';
+import { AuthService } from './business/AuthService.js';
 import { BookRepository } from './data/BookRepository.js';
+import { MemberRepository } from './data/MemberRepository.js';
 import { BookController } from './presentation/BookController.js';
 import { HealthController } from './presentation/HealthController.js';
+import { AuthController } from './presentation/AuthController.js';
 
 import { MemberController } from './presentation/MemberController.js';
 import {
   createBookRoutes,
   createMemberFormRoutes,
   createMemberRoutes,
+  createAuthRoutes,
 } from './presentation/routes.js';
 import { WebController } from './presentation/WebController.js';
 
@@ -96,15 +100,20 @@ const bookRepository = new BookRepository();
 const bookService = new BookService(bookRepository);
 const bookController = new BookController(bookService);
 
+const memberRepository = new MemberRepository();
 const memberService = new MemberService();
 const memberController = new MemberController(memberService);
+
+const authService = new AuthService(memberRepository);
+const authController = new AuthController(authService);
+
 const webController = new WebController(bookService, memberService);
 const healthController = new HealthController();
 
 // API Routes (with /api prefix)
 app.use('/api/books', createBookRoutes(bookController));
-
 app.use('/api/members', createMemberRoutes(memberController));
+app.use('/api/auth', createAuthRoutes(authController));
 
 // Form handling routes (for web application forms with redirects)
 app.use('/api/form/members', createMemberFormRoutes(memberController));
@@ -124,6 +133,11 @@ app.get('/members', webController.members);
 app.get('/members/add', webController.addMemberForm);
 app.get('/members/:id', webController.memberDetails);
 app.get('/members/:id/edit', webController.editMemberForm);
+
+// Authentication Web Routes
+app.get('/login', webController.loginForm);
+app.get('/account', webController.memberAccount);
+app.get('/set-password', webController.setPasswordForm);
 
 // Global error handler
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {

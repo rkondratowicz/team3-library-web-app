@@ -1,0 +1,130 @@
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card">
+            <div class="card-header text-center">
+                <h3><i class="fas fa-user-lock"></i> Member Login</h3>
+            </div>
+            <div class="card-body">
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <small>
+                        <a href="/set-password" class="text-muted">First time? Set your password</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Login Result Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loginModalTitle">Login Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="loginModalBody">
+                <!-- Dynamic content -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const loginData = {
+        username: formData.get('username'),
+        password: formData.get('password')
+    };
+    
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    
+    try {
+        // Show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
+        
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(loginData)
+        });
+        
+        const result = await response.json();
+        
+        const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+        const modalTitle = document.getElementById('loginModalTitle');
+        const modalBody = document.getElementById('loginModalBody');
+        
+        if (result.success) {
+            modalTitle.textContent = 'Login Successful';
+            modalBody.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> Welcome back, ${result.member.memberName}!
+                </div>
+                <p>You will be redirected to your account page.</p>
+            `;
+            
+            // Redirect after a delay
+            setTimeout(() => {
+                window.location.href = '/account';
+            }, 2000);
+        } else {
+            modalTitle.textContent = 'Login Failed';
+            modalBody.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> ${result.message || 'Login failed'}
+                </div>
+            `;
+        }
+        
+        modal.show();
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        
+        const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+        const modalTitle = document.getElementById('loginModalTitle');
+        const modalBody = document.getElementById('loginModalBody');
+        
+        modalTitle.textContent = 'Error';
+        modalBody.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> Network error. Please try again.
+            </div>
+        `;
+        
+        modal.show();
+    } finally {
+        // Reset button
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+    }
+});
+</script>
