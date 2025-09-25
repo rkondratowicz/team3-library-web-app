@@ -48,7 +48,7 @@ export interface IBookService {
 }
 
 export class BookService implements IBookService {
-  constructor(private bookRepository: IBookRepository) {}
+  constructor(private bookRepository: IBookRepository) { }
 
   async getAllBooks(): Promise<BusinessResult<Book[]>> {
     try {
@@ -241,13 +241,55 @@ export class BookService implements IBookService {
   }
 
   // New search and filter methods
-  async searchBooks(_filters: BookSearchFilters): Promise<BusinessResult<Book[]>> {
+  async searchBooks(filters: BookSearchFilters): Promise<BusinessResult<Book[]>> {
     try {
-      // TODO: Implement when repository method is available
-      const books = await this.bookRepository.getAllBooks();
+      let books = await this.bookRepository.getAllBooks();
+
+      // Apply filters
+      if (filters.title) {
+        books = books.filter(book =>
+          book.title.toLowerCase().includes(filters.title!.toLowerCase())
+        );
+      }
+
+      if (filters.author) {
+        books = books.filter(book =>
+          book.author.toLowerCase().includes(filters.author!.toLowerCase())
+        );
+      }
+
+      if (filters.isbn) {
+        books = books.filter(book => book.isbn === filters.isbn);
+      }
+
+      if (filters.genre) {
+        books = books.filter(book => book.genre === filters.genre);
+      }
+
+      if (filters.publication_year) {
+        books = books.filter(book => book.publication_year === filters.publication_year);
+      }
+
+      // Apply availability filter if requested
+      if (filters.available_only) {
+        const filteredBooks: Book[] = [];
+        for (const book of books) {
+          const availableCopies = await this.bookRepository.getAvailableBookCopies(book.id);
+          if (availableCopies.length > 0) {
+            filteredBooks.push(book);
+          }
+        }
+        books = filteredBooks;
+      }
+
+      // Apply pagination
+      const offset = filters.offset || 0;
+      const limit = filters.limit || books.length;
+      const paginatedBooks = books.slice(offset, offset + limit);
+
       return {
         success: true,
-        data: books,
+        data: paginatedBooks,
         statusCode: 200,
       };
     } catch (error) {
@@ -270,7 +312,7 @@ export class BookService implements IBookService {
         };
       }
 
-      // TODO: Implement when repository method is available
+      // Search for book by ISBN
       const books = await this.bookRepository.getAllBooks();
       const book = books.find((b) => b.isbn === isbn);
 
@@ -299,7 +341,7 @@ export class BookService implements IBookService {
 
   async getBooksByGenre(genre: string): Promise<BusinessResult<Book[]>> {
     try {
-      // TODO: Implement when repository method is available
+      // Filter books by genre
       const books = await this.bookRepository.getAllBooks();
       const filteredBooks = books.filter((book) => book.genre === genre);
 
@@ -320,7 +362,7 @@ export class BookService implements IBookService {
 
   async getBooksByAuthor(author: string): Promise<BusinessResult<Book[]>> {
     try {
-      // TODO: Implement when repository method is available
+      // Filter books by author (partial match)
       const books = await this.bookRepository.getAllBooks();
       const filteredBooks = books.filter((book) =>
         book.author.toLowerCase().includes(author.toLowerCase()),
@@ -352,11 +394,31 @@ export class BookService implements IBookService {
         };
       }
 
-      // TODO: Implement when repository method is available
+      // Get the book first
+      const book = await this.bookRepository.getBookById(id);
+      if (!book) {
+        return {
+          success: false,
+          error: 'Book not found',
+          statusCode: 404,
+        };
+      }
+
+      // Get all copies for this book
+      const copies = await this.bookRepository.getBookCopies(id);
+      const availableCopies = copies.filter(copy => copy.status === 'available');
+
+      const bookWithCopies: BookWithCopies = {
+        ...book,
+        copies: copies,
+        total_copies: copies.length,
+        available_copies: availableCopies.length,
+      };
+
       return {
-        success: false,
-        error: 'Method not implemented yet',
-        statusCode: 501,
+        success: true,
+        data: bookWithCopies,
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.getBookWithCopies:', error);
@@ -370,11 +432,27 @@ export class BookService implements IBookService {
 
   async getAllBooksWithCopies(): Promise<BusinessResult<BookWithCopies[]>> {
     try {
-      // TODO: Implement when repository method is available
+      const books = await this.bookRepository.getAllBooks();
+      const booksWithCopies: BookWithCopies[] = [];
+
+      for (const book of books) {
+        const copies = await this.bookRepository.getBookCopies(book.id);
+        const availableCopies = copies.filter(copy => copy.status === 'available');
+
+        const bookWithCopies: BookWithCopies = {
+          ...book,
+          copies: copies,
+          total_copies: copies.length,
+          available_copies: availableCopies.length,
+        };
+
+        booksWithCopies.push(bookWithCopies);
+      }
+
       return {
-        success: false,
-        error: 'Method not implemented yet',
-        statusCode: 501,
+        success: true,
+        data: booksWithCopies,
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.getAllBooksWithCopies:', error);
@@ -689,11 +767,30 @@ export class BookService implements IBookService {
   // Inventory and availability methods
   async getBookInventory(): Promise<BusinessResult<BookAvailability[]>> {
     try {
-      // TODO: Implement when repository method is available
+      const books = await this.bookRepository.getAllBooks();
+      const inventory: BookAvailability[] = [];
+
+      for (const book of books) {
+        const copies = await this.bookRepository.getBookCopies(book.id);
+        const availableCopies = copies.filter(copy => copy.status === 'available').length;
+        const borrowedCopies = copies.filter(copy => copy.status === 'borrowed').length;
+        const maintenanceCopies = copies.filter(copy => copy.status === 'maintenance').length;
+
+        const availability: BookAvailability = {
+          book_id: book.id,
+          total_copies: copies.length,
+          available_copies: availableCopies,
+          borrowed_copies: borrowedCopies,
+          maintenance_copies: maintenanceCopies,
+        };
+
+        inventory.push(availability);
+      }
+
       return {
-        success: false,
-        error: 'Method not implemented yet',
-        statusCode: 501,
+        success: true,
+        data: inventory,
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.getBookInventory:', error);
@@ -715,11 +812,33 @@ export class BookService implements IBookService {
         };
       }
 
-      // TODO: Implement when repository method is available
+      // Check if book exists
+      const bookExists = await this.bookRepository.bookExists(bookId);
+      if (!bookExists) {
+        return {
+          success: false,
+          error: 'Book not found',
+          statusCode: 404,
+        };
+      }
+
+      const copies = await this.bookRepository.getBookCopies(bookId);
+      const availableCopies = copies.filter(copy => copy.status === 'available').length;
+      const borrowedCopies = copies.filter(copy => copy.status === 'borrowed').length;
+      const maintenanceCopies = copies.filter(copy => copy.status === 'maintenance').length;
+
+      const availability: BookAvailability = {
+        book_id: bookId,
+        total_copies: copies.length,
+        available_copies: availableCopies,
+        borrowed_copies: borrowedCopies,
+        maintenance_copies: maintenanceCopies,
+      };
+
       return {
-        success: false,
-        error: 'Method not implemented yet',
-        statusCode: 501,
+        success: true,
+        data: availability,
+        statusCode: 200,
       };
     } catch (error) {
       console.error('Error in BookService.getBookAvailability:', error);
