@@ -150,8 +150,6 @@ export interface Member {
   max_books?: number;
   member_since?: string;
   updated_at?: string;
-  username?: string;
-  password_hash?: string; // Only used internally, never sent to client
 }
 
 export interface CreateMemberRequest {
@@ -160,8 +158,6 @@ export interface CreateMemberRequest {
   phone?: string;
   memAddress?: string;
   max_books?: number;
-  username?: string;
-  password?: string;
 }
 
 export interface UpdateMemberRequest {
@@ -208,30 +204,6 @@ export interface MemberSearchResponse {
   query?: string;
   filters?: MemberSearchFilters;
   hasMore: boolean;
-}
-
-// Authentication interfaces
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  success: boolean;
-  member?: Omit<Member, 'password_hash'>; // Never include password hash in responses
-  token?: string; // For future JWT implementation
-  message?: string;
-}
-
-export interface SetPasswordRequest {
-  username: string;
-  password: string;
-}
-
-export interface AuthSession {
-  memberId: string;
-  username: string;
-  loginTime: string;
 }
 
 // Business layer result type
