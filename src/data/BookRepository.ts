@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sqlite3 from 'sqlite3';
-import type { Book, BookDbRow, BookCopy, CreateBookCopyRequest, UpdateBookCopyRequest } from '../shared/types.js';
+import type { Book, BookCopy, BookDbRow } from '../shared/types.js';
 
 export interface IBookRepository {
   getAllBooks(): Promise<Book[]>;
@@ -51,7 +51,7 @@ export class BookRepository implements IBookRepository {
       publication_year: row.publication_year,
       description: row.description,
       created_at: row.created_at,
-      updated_at: row.updated_at
+      updated_at: row.updated_at,
     };
   }
 
@@ -63,12 +63,12 @@ export class BookRepository implements IBookRepository {
         ORDER BY title ASC
       `;
 
-      this.db.all(sql, [], (err: Error | null, rows: any[]) => {
+      this.db.all(sql, [], (err: Error | null, rows: BookDbRow[]) => {
         if (err) {
           console.error('Error in getAllBooks:', err);
           reject(err);
         } else {
-          const books: Book[] = rows.map(row => this.mapDbRowToBook(row));
+          const books: Book[] = rows.map((row) => this.mapDbRowToBook(row));
           resolve(books);
         }
       });
@@ -83,12 +83,13 @@ export class BookRepository implements IBookRepository {
         WHERE id = ?
       `;
 
-      this.db.get(sql, [id], (err: Error | null, row: any) => {
+      this.db.get(sql, [id], (err: Error | null, row: BookDbRow) => {
         if (err) {
           console.error('Error in getBookById:', err);
           reject(err);
         } else if (row) {
-          resolve(this.mapDbRowToBook(row));
+          const book = this.mapDbRowToBook(row);
+          resolve(book);
         } else {
           resolve(null);
         }
@@ -105,15 +106,23 @@ export class BookRepository implements IBookRepository {
 
       this.db.run(
         sql,
-        [book.id, book.author, book.title, book.isbn, book.genre, book.publication_year, book.description],
-        function (err: Error | null) {
+        [
+          book.id,
+          book.author,
+          book.title,
+          book.isbn,
+          book.genre,
+          book.publication_year,
+          book.description,
+        ],
+        (err: Error | null) => {
           if (err) {
             console.error('Error in createBook:', err);
             reject(err);
           } else {
             resolve();
           }
-        }
+        },
       );
     });
   }
@@ -121,7 +130,7 @@ export class BookRepository implements IBookRepository {
   async updateBook(id: string, updates: Partial<Book>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const updateFields: string[] = [];
-      const values: any[] = [];
+      const values: (string | number | undefined)[] = [];
 
       if (updates.author !== undefined) {
         updateFields.push('author = ?');
@@ -214,19 +223,19 @@ export class BookRepository implements IBookRepository {
         ORDER BY copy_number ASC
       `;
 
-      this.db.all(sql, [bookId], (err: Error | null, rows: any[]) => {
+      this.db.all(sql, [bookId], (err: Error | null, rows: BookCopy[]) => {
         if (err) {
           console.error('Database error:', err.message);
           reject(err);
         } else {
-          const copies: BookCopy[] = rows.map(row => ({
+          const copies: BookCopy[] = rows.map((row) => ({
             id: row.id,
             book_id: row.book_id,
             copy_number: row.copy_number,
             status: row.status,
             condition: row.condition,
             created_at: row.created_at,
-            updated_at: row.updated_at
+            updated_at: row.updated_at,
           }));
           resolve(copies);
         }
@@ -242,7 +251,7 @@ export class BookRepository implements IBookRepository {
         WHERE id = ?
       `;
 
-      this.db.get(sql, [copyId], (err: Error | null, row: any) => {
+      this.db.get(sql, [copyId], (err: Error | null, row: BookCopy) => {
         if (err) {
           console.error('Database error:', err.message);
           reject(err);
@@ -254,7 +263,7 @@ export class BookRepository implements IBookRepository {
             status: row.status,
             condition: row.condition,
             created_at: row.created_at,
-            updated_at: row.updated_at
+            updated_at: row.updated_at,
           };
           resolve(copy);
         } else {
@@ -274,14 +283,14 @@ export class BookRepository implements IBookRepository {
       this.db.run(
         sql,
         [bookCopy.id, bookCopy.book_id, bookCopy.copy_number, bookCopy.status, bookCopy.condition],
-        function (err: Error | null) {
+        (err: Error | null) => {
           if (err) {
             console.error('Database error:', err.message);
             reject(err);
           } else {
             resolve();
           }
-        }
+        },
       );
     });
   }
@@ -289,7 +298,7 @@ export class BookRepository implements IBookRepository {
   async updateBookCopy(copyId: string, updates: Partial<BookCopy>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const updateFields: string[] = [];
-      const values: any[] = [];
+      const values: string[] = [];
 
       if (updates.status !== undefined) {
         updateFields.push('status = ?');
@@ -345,19 +354,19 @@ export class BookRepository implements IBookRepository {
         ORDER BY copy_number ASC
       `;
 
-      this.db.all(sql, [bookId], (err: Error | null, rows: any[]) => {
+      this.db.all(sql, [bookId], (err: Error | null, rows: BookCopy[]) => {
         if (err) {
           console.error('Database error:', err.message);
           reject(err);
         } else {
-          const copies: BookCopy[] = rows.map(row => ({
+          const copies: BookCopy[] = rows.map((row) => ({
             id: row.id,
             book_id: row.book_id,
             copy_number: row.copy_number,
             status: row.status,
             condition: row.condition,
             created_at: row.created_at,
-            updated_at: row.updated_at
+            updated_at: row.updated_at,
           }));
           resolve(copies);
         }
@@ -373,7 +382,7 @@ export class BookRepository implements IBookRepository {
         WHERE book_id = ?
       `;
 
-      this.db.get(sql, [bookId], (err: Error | null, row: any) => {
+      this.db.get(sql, [bookId], (err: Error | null, row: { max_copy_number: number } | null) => {
         if (err) {
           console.error('Database error:', err.message);
           reject(err);

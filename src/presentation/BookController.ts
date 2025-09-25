@@ -1,19 +1,18 @@
 import type { Request, Response } from 'express';
 import type { IBookService } from '../business/BookService.js';
 import type {
-  BookResponse,
-  BooksResponse,
-  BookWithCopiesResponse,
-  BookCopyResponse,
+  BookAvailability,
   BookCopiesResponse,
-  BookSearchResponse,
+  BookCopyResponse,
   BookInventoryResponse,
-  CreateBookRequest,
-  UpdateBookRequest,
-  CreateBookCopyRequest,
-  UpdateBookCopyRequest,
+  BookResponse,
   BookSearchFilters,
+  BooksResponse,
+  BookWithCopies,
+  BookWithCopiesResponse,
+  CreateBookRequest,
   ErrorResponse,
+  UpdateBookRequest,
 } from '../shared/types.js';
 
 export class BookController {
@@ -139,7 +138,7 @@ export class BookController {
   // GET /books/search - Search books with filters
   searchBooks = async (
     req: Request,
-    res: Response<BooksResponse | ErrorResponse>
+    res: Response<BooksResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const filters: BookSearchFilters = {
@@ -147,14 +146,16 @@ export class BookController {
         author: req.query.author as string,
         isbn: req.query.isbn as string,
         genre: req.query.genre as string,
-        publication_year: req.query.publication_year ? parseInt(req.query.publication_year as string) : undefined,
+        publication_year: req.query.publication_year
+          ? parseInt(req.query.publication_year as string, 10)
+          : undefined,
         available_only: req.query.available_only === 'true',
-        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string, 10) : undefined,
+        offset: req.query.offset ? parseInt(req.query.offset as string, 10) : undefined,
       };
 
       // Remove undefined values
-      Object.keys(filters).forEach(key => {
+      Object.keys(filters).forEach((key) => {
         if (filters[key as keyof BookSearchFilters] === undefined) {
           delete filters[key as keyof BookSearchFilters];
         }
@@ -182,7 +183,7 @@ export class BookController {
   // GET /books/by-isbn/:isbn - Get book by ISBN
   getBookByISBN = async (
     req: Request,
-    res: Response<BookResponse | ErrorResponse>
+    res: Response<BookResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const { isbn } = req.params;
@@ -217,7 +218,7 @@ export class BookController {
   // GET /books/by-genre/:genre - Get books by genre
   getBooksByGenre = async (
     req: Request,
-    res: Response<BooksResponse | ErrorResponse>
+    res: Response<BooksResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const { genre } = req.params;
@@ -252,7 +253,7 @@ export class BookController {
   // GET /books/by-author/:author - Get books by author
   getBooksByAuthor = async (
     req: Request,
-    res: Response<BooksResponse | ErrorResponse>
+    res: Response<BooksResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const { author } = req.params;
@@ -287,7 +288,7 @@ export class BookController {
   // GET /books/:id/with-copies - Get book with all copies
   getBookWithCopies = async (
     req: Request,
-    res: Response<BookWithCopiesResponse | ErrorResponse>
+    res: Response<BookWithCopiesResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const { id } = req.params;
@@ -321,8 +322,8 @@ export class BookController {
 
   // GET /books/with-copies - Get all books with copies
   getAllBooksWithCopies = async (
-    req: Request,
-    res: Response<{ books: any[] } | ErrorResponse>
+    _req: Request,
+    res: Response<{ books: BookWithCopies[] } | ErrorResponse>,
   ): Promise<void> => {
     try {
       const result = await this.bookService.getAllBooksWithCopies();
@@ -347,7 +348,7 @@ export class BookController {
   // GET /books/:id/copies - Get all copies for a book
   getBookCopies = async (
     req: Request,
-    res: Response<BookCopiesResponse | ErrorResponse>
+    res: Response<BookCopiesResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const { id } = req.params;
@@ -382,7 +383,7 @@ export class BookController {
   // POST /books/:id/copies - Add a new copy to a book
   addBookCopy = async (
     req: Request,
-    res: Response<BookCopyResponse | ErrorResponse>
+    res: Response<BookCopyResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const { id } = req.params;
@@ -421,7 +422,7 @@ export class BookController {
   // GET /books/:id/copies/available - Get available copies for a book
   getAvailableCopies = async (
     req: Request,
-    res: Response<BookCopiesResponse | ErrorResponse>
+    res: Response<BookCopiesResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const { id } = req.params;
@@ -456,7 +457,7 @@ export class BookController {
   // PUT /copies/:id/status - Update copy status
   updateBookCopyStatus = async (
     req: Request,
-    res: Response<BookCopyResponse | ErrorResponse>
+    res: Response<BookCopyResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const { id } = req.params;
@@ -500,7 +501,7 @@ export class BookController {
   // PUT /copies/:id/condition - Update copy condition
   updateBookCopyCondition = async (
     req: Request,
-    res: Response<BookCopyResponse | ErrorResponse>
+    res: Response<BookCopyResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const { id } = req.params;
@@ -542,10 +543,7 @@ export class BookController {
   };
 
   // DELETE /copies/:id - Remove a book copy
-  removeBookCopy = async (
-    req: Request,
-    res: Response<ErrorResponse>
-  ): Promise<void> => {
+  removeBookCopy = async (req: Request, res: Response<ErrorResponse>): Promise<void> => {
     try {
       const { id } = req.params;
 
@@ -578,8 +576,8 @@ export class BookController {
 
   // GET /books/inventory - Get book inventory report
   getBookInventory = async (
-    req: Request,
-    res: Response<BookInventoryResponse | ErrorResponse>
+    _req: Request,
+    res: Response<BookInventoryResponse | ErrorResponse>,
   ): Promise<void> => {
     try {
       const result = await this.bookService.getBookInventory();
@@ -595,7 +593,7 @@ export class BookController {
 
         res.status(result.statusCode || 200).json({
           inventory: result.data,
-          summary
+          summary,
         });
       } else {
         res.status(result.statusCode || 500).json({
@@ -615,7 +613,7 @@ export class BookController {
   // GET /books/:id/availability - Get availability for a specific book
   getBookAvailability = async (
     req: Request,
-    res: Response<{ availability: any } | ErrorResponse>
+    res: Response<{ availability: BookAvailability } | ErrorResponse>,
   ): Promise<void> => {
     try {
       const { id } = req.params;

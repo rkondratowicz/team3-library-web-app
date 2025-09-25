@@ -2,14 +2,14 @@ import { v4 as uuidv4 } from 'uuid';
 import type { IBookRepository } from '../data/BookRepository.js';
 import type {
   Book,
-  BookCopy,
-  BookWithCopies,
   BookAvailability,
+  BookCopy,
   BookSearchFilters,
+  BookWithCopies,
+  BusinessResult,
+  CreateBookCopyRequest,
   CreateBookRequest,
   UpdateBookRequest,
-  CreateBookCopyRequest,
-  BusinessResult,
 } from '../shared/types.js';
 
 export interface IBookService {
@@ -48,7 +48,7 @@ export interface IBookService {
 }
 
 export class BookService implements IBookService {
-  constructor(private bookRepository: IBookRepository) { }
+  constructor(private bookRepository: IBookRepository) {}
 
   async getAllBooks(): Promise<BusinessResult<Book[]>> {
     try {
@@ -241,7 +241,7 @@ export class BookService implements IBookService {
   }
 
   // New search and filter methods
-  async searchBooks(filters: BookSearchFilters): Promise<BusinessResult<Book[]>> {
+  async searchBooks(_filters: BookSearchFilters): Promise<BusinessResult<Book[]>> {
     try {
       // TODO: Implement when repository method is available
       const books = await this.bookRepository.getAllBooks();
@@ -272,7 +272,7 @@ export class BookService implements IBookService {
 
       // TODO: Implement when repository method is available
       const books = await this.bookRepository.getAllBooks();
-      const book = books.find(b => b.isbn === isbn);
+      const book = books.find((b) => b.isbn === isbn);
 
       if (!book) {
         return {
@@ -301,7 +301,7 @@ export class BookService implements IBookService {
     try {
       // TODO: Implement when repository method is available
       const books = await this.bookRepository.getAllBooks();
-      const filteredBooks = books.filter(book => book.genre === genre);
+      const filteredBooks = books.filter((book) => book.genre === genre);
 
       return {
         success: true,
@@ -322,8 +322,8 @@ export class BookService implements IBookService {
     try {
       // TODO: Implement when repository method is available
       const books = await this.bookRepository.getAllBooks();
-      const filteredBooks = books.filter(book =>
-        book.author.toLowerCase().includes(author.toLowerCase())
+      const filteredBooks = books.filter((book) =>
+        book.author.toLowerCase().includes(author.toLowerCase()),
       );
 
       return {
@@ -387,7 +387,10 @@ export class BookService implements IBookService {
   }
 
   // Copy management methods
-  async addBookCopy(bookId: string, copyData: CreateBookCopyRequest): Promise<BusinessResult<BookCopy>> {
+  async addBookCopy(
+    bookId: string,
+    copyData: CreateBookCopyRequest,
+  ): Promise<BusinessResult<BookCopy>> {
     try {
       if (!this.isValidUUID(bookId)) {
         return {
@@ -418,7 +421,7 @@ export class BookService implements IBookService {
         status: 'available',
         condition: copyData.condition || 'good',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       await this.bookRepository.createBookCopy(newBookCopy);
@@ -521,7 +524,9 @@ export class BookService implements IBookService {
       }
 
       // Update the copy status
-      const updated = await this.bookRepository.updateBookCopy(copyId, { status: status as 'available' | 'borrowed' | 'maintenance' });
+      const updated = await this.bookRepository.updateBookCopy(copyId, {
+        status: status as 'available' | 'borrowed' | 'maintenance',
+      });
       if (!updated) {
         return {
           success: false,
@@ -547,7 +552,10 @@ export class BookService implements IBookService {
     }
   }
 
-  async updateBookCopyCondition(copyId: string, condition: string): Promise<BusinessResult<BookCopy>> {
+  async updateBookCopyCondition(
+    copyId: string,
+    condition: string,
+  ): Promise<BusinessResult<BookCopy>> {
     try {
       if (!this.isValidUUID(copyId)) {
         return {
@@ -578,7 +586,9 @@ export class BookService implements IBookService {
       }
 
       // Update the copy condition
-      const updated = await this.bookRepository.updateBookCopy(copyId, { condition: condition as 'excellent' | 'good' | 'fair' | 'poor' });
+      const updated = await this.bookRepository.updateBookCopy(copyId, {
+        condition: condition as 'excellent' | 'good' | 'fair' | 'poor',
+      });
       if (!updated) {
         return {
           success: false,
@@ -735,19 +745,19 @@ export class BookService implements IBookService {
       // ISBN-10 validation
       let sum = 0;
       for (let i = 0; i < 9; i++) {
-        sum += parseInt(cleanISBN[i]) * (10 - i);
+        sum += parseInt(cleanISBN[i], 10) * (10 - i);
       }
       const checkDigit = (11 - (sum % 11)) % 11;
-      const lastDigit = cleanISBN[9] === 'X' ? 10 : parseInt(cleanISBN[9]);
+      const lastDigit = cleanISBN[9] === 'X' ? 10 : parseInt(cleanISBN[9], 10);
       return checkDigit === lastDigit;
     } else {
       // ISBN-13 validation
       let sum = 0;
       for (let i = 0; i < 12; i++) {
-        sum += parseInt(cleanISBN[i]) * (i % 2 === 0 ? 1 : 3);
+        sum += parseInt(cleanISBN[i], 10) * (i % 2 === 0 ? 1 : 3);
       }
       const checkDigit = (10 - (sum % 10)) % 10;
-      return checkDigit === parseInt(cleanISBN[12]);
+      return checkDigit === parseInt(cleanISBN[12], 10);
     }
   }
 
@@ -760,7 +770,7 @@ export class BookService implements IBookService {
         return {
           success: false,
           error: 'Author is required and cannot be empty',
-          statusCode: 400
+          statusCode: 400,
         };
       }
 
@@ -768,7 +778,7 @@ export class BookService implements IBookService {
         return {
           success: false,
           error: 'Title is required and cannot be empty',
-          statusCode: 400
+          statusCode: 400,
         };
       }
     }
@@ -779,7 +789,7 @@ export class BookService implements IBookService {
         return {
           success: false,
           error: 'Invalid ISBN format. Must be a valid 10 or 13 digit ISBN',
-          statusCode: 400
+          statusCode: 400,
         };
       }
     }
@@ -791,7 +801,7 @@ export class BookService implements IBookService {
         return {
           success: false,
           error: `Publication year must be between 1000 and ${currentYear + 1}`,
-          statusCode: 400
+          statusCode: 400,
         };
       }
     }
@@ -801,7 +811,7 @@ export class BookService implements IBookService {
       return {
         success: false,
         error: 'Genre must be 100 characters or less',
-        statusCode: 400
+        statusCode: 400,
       };
     }
 
@@ -810,17 +820,15 @@ export class BookService implements IBookService {
       return {
         success: false,
         error: 'Description must be 2000 characters or less',
-        statusCode: 400
+        statusCode: 400,
       };
     }
 
     return {
       success: true,
-      statusCode: 200
+      statusCode: 200,
     };
   }
-
-
 
   private isValidUUID(id: string): boolean {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

@@ -33,18 +33,26 @@ const hbs = create({
     },
     statusClass: (status: string) => {
       switch (status) {
-        case 'available': return 'bg-success';
-        case 'borrowed': return 'bg-warning';
-        case 'maintenance': return 'bg-danger';
-        default: return 'bg-secondary';
+        case 'available':
+          return 'bg-success';
+        case 'borrowed':
+          return 'bg-warning';
+        case 'maintenance':
+          return 'bg-danger';
+        default:
+          return 'bg-secondary';
       }
     },
     statusIcon: (status: string) => {
       switch (status) {
-        case 'available': return 'fas fa-check';
-        case 'borrowed': return 'fas fa-user';
-        case 'maintenance': return 'fas fa-wrench';
-        default: return 'fas fa-question';
+        case 'available':
+          return 'fas fa-check';
+        case 'borrowed':
+          return 'fas fa-user';
+        case 'maintenance':
+          return 'fas fa-wrench';
+        default:
+          return 'fas fa-question';
       }
     },
   },
