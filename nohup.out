@@ -1,0 +1,66 @@
+
+> team3-library-web-app@1.0.0 dev
+> node --loader ts-node/esm src/app.ts
+
+(node:8119) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("ts-node/esm", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+Library API server listening on port 3001
+Available endpoints:
+  GET    /books      - Get all books
+  POST   /books      - Create a new book
+  GET    /books/:id  - Get book by ID
+  PUT    /books/:id  - Update book
+  DELETE /books/:id  - Delete book
+  GET    /health     - Health check
+  GET    /greet?q=name - Greeting
+Connected to the SQLite database.
+POST /api/form/members/550e8400-e29b-41d4-a716-446655440100 - Body: {
+  _method: 'PUT',
+  memberName: 'Alice Johnson Updated',
+  email: 'alice.updated@email.com'
+}
+SIGTERM received, shutting down gracefully...
+
+> team3-library-web-app@1.0.0 dev
+> node --loader ts-node/esm src/app.ts
+
+(node:8855) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("ts-node/esm", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+Library API server listening on port 3001
+Available endpoints:
+  GET    /books      - Get all books
+  POST   /books      - Create a new book
+  GET    /books/:id  - Get book by ID
+  PUT    /books/:id  - Update book
+  DELETE /books/:id  - Delete book
+  GET    /health     - Health check
+  GET    /greet?q=name - Greeting
+Connected to the SQLite database.
+Method override: POST -> PUT
+PUT /api/form/members/550e8400-e29b-41d4-a716-446655440100 - Body: {
+  memberName: 'Alice Johnson Updated',
+  email: 'alice.updated@email.com'
+}
+GET /members/550e8400-e29b-41d4-a716-446655440100/edit - Body: {}
+GET /css/styles.css - Body: {}
+GET /js/app.js - Body: {}
+SIGTERM received, shutting down gracefully...
+
+> team3-library-web-app@1.0.0 dev
+> node --loader ts-node/esm src/app.ts
+
+(node:9516) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("ts-node/esm", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+Library API server listening on port 3001
+Available endpoints:
+  GET    /books      - Get all books
+  POST   /books      - Create a new book
+  GET    /books/:id  - Get book by ID
+  PUT    /books/:id  - Update book
+  DELETE /books/:id  - Delete book
+  GET    /health     - Health check
+  GET    /greet?q=name - Greeting
+Connected to the SQLite database.
