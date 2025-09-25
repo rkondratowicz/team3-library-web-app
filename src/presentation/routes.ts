@@ -1,7 +1,7 @@
 import express from 'express';
+import type { AuthController } from './AuthController.js';
 import type { BookController } from './BookController.js';
 import type { MemberController } from './MemberController.js';
-import type { AuthController } from './AuthController.js';
 
 export function createBookRoutes(bookController: BookController): express.Router {
   const router = express.Router();

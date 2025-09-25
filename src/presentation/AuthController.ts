@@ -1,10 +1,11 @@
 import type { Request, Response } from 'express';
 import type { IAuthService } from '../business/AuthService.js';
 import type {
+    AuthSession,
+    ErrorResponse,
     LoginRequest,
     LoginResponse,
     SetPasswordRequest,
-    ErrorResponse,
 } from '../shared/types.js';
 
 export class AuthController {
@@ -115,7 +116,7 @@ export class AuthController {
     // GET /auth/session - Check session status
     checkSession = async (
         req: Request,
-        res: Response<{ valid: boolean; session?: any } | ErrorResponse>,
+        res: Response<{ valid: boolean; session?: AuthSession } | ErrorResponse>,
     ): Promise<void> => {
         try {
             const { memberId } = req.query;

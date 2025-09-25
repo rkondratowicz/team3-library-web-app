@@ -1,12 +1,12 @@
 import bcrypt from 'bcrypt';
+import type { IMemberRepository } from '../data/MemberRepository.js';
 import type {
+    AuthSession,
+    BusinessResult,
     LoginRequest,
     LoginResponse,
     SetPasswordRequest,
-    AuthSession,
-    BusinessResult,
 } from '../shared/types.js';
-import type { IMemberRepository } from '../data/MemberRepository.js';
 
 export interface IAuthService {
     login(request: LoginRequest): Promise<LoginResponse>;
@@ -75,6 +75,7 @@ export class AuthService implements IAuthService {
             this.activeSessions.set(member.id, session);
 
             // Return success response (without password hash)
+            // biome-ignore lint/correctness/noUnusedVariables: password_hash is intentionally extracted and discarded for security
             const { password_hash, ...memberWithoutPassword } = member;
             return {
                 success: true,

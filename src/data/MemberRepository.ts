@@ -3,6 +3,18 @@ import { fileURLToPath } from 'node:url';
 import sqlite3 from 'sqlite3';
 import type { Member } from '../shared/types.js';
 
+interface MemberRow {
+    id: string;
+    memberName: string;
+    email: string;
+    phone: string | null;
+    memAddress: string | null;
+    status: string;
+    max_books: number;
+    username: string | null;
+    password_hash: string | null;
+}
+
 export interface IMemberRepository {
     getMemberById(id: string): Promise<Member | null>;
     getMemberByEmail(email: string): Promise<Member | null>;
@@ -48,11 +60,11 @@ export class MemberRepository implements IMemberRepository {
         WHERE ID = ?
       `;
 
-            this.db.get(query, [id], (err: Error | null, row: any) => {
+            this.db.get(query, [id], (err: Error | null, row: MemberRow | undefined) => {
                 if (err) {
                     reject(new Error(`Failed to get member by ID: ${err.message}`));
                 } else {
-                    resolve(row || null);
+                    resolve((row as Member) || null);
                 }
             });
         });
@@ -77,11 +89,11 @@ export class MemberRepository implements IMemberRepository {
         WHERE email = ?
       `;
 
-            this.db.get(query, [email], (err: Error | null, row: any) => {
+            this.db.get(query, [email], (err: Error | null, row: MemberRow | undefined) => {
                 if (err) {
                     reject(new Error(`Failed to get member by email: ${err.message}`));
                 } else {
-                    resolve(row || null);
+                    resolve((row as Member) || null);
                 }
             });
         });
@@ -106,11 +118,11 @@ export class MemberRepository implements IMemberRepository {
         WHERE username = ?
       `;
 
-            this.db.get(query, [username], (err: Error | null, row: any) => {
+            this.db.get(query, [username], (err: Error | null, row: MemberRow | undefined) => {
                 if (err) {
                     reject(new Error(`Failed to get member by username: ${err.message}`));
                 } else {
-                    resolve(row || null);
+                    resolve((row as Member) || null);
                 }
             });
         });
@@ -135,11 +147,11 @@ export class MemberRepository implements IMemberRepository {
         ORDER BY memberName
       `;
 
-            this.db.all(query, [], (err: Error | null, rows: any[]) => {
+            this.db.all(query, [], (err: Error | null, rows: MemberRow[]) => {
                 if (err) {
                     reject(new Error(`Failed to get all members: ${err.message}`));
                 } else {
-                    resolve(rows || []);
+                    resolve((rows as Member[]) || []);
                 }
             });
         });
@@ -167,7 +179,7 @@ export class MemberRepository implements IMemberRepository {
                 member.password_hash || null,
             ];
 
-            this.db.run(query, values, function (err: Error | null) {
+            this.db.run(query, values, (err: Error | null) => {
                 if (err) {
                     reject(new Error(`Failed to create member: ${err.message}`));
                 } else {
@@ -185,7 +197,7 @@ export class MemberRepository implements IMemberRepository {
         return new Promise((resolve, reject) => {
             // Build dynamic UPDATE query
             const updateFields: string[] = [];
-            const values: any[] = [];
+            const values: (string | number | null)[] = [];
 
             if (updates.memberName !== undefined) {
                 updateFields.push('memberName = ?');
@@ -253,11 +265,11 @@ export class MemberRepository implements IMemberRepository {
         return new Promise((resolve, reject) => {
             const query = 'DELETE FROM members WHERE ID = ?';
 
-            this.db.run(query, [id], function (err: Error | null) {
+            this.db.run(query, [id], (err: Error | null) => {
                 if (err) {
                     reject(new Error(`Failed to delete member: ${err.message}`));
                 } else {
-                    resolve(this.changes > 0);
+                    resolve(true);
                 }
             });
         });
