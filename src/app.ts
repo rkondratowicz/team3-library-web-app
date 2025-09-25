@@ -10,6 +10,7 @@ import { MemberService } from './business/MemberService.js';
 import { BookRepository } from './data/BookRepository.js';
 import { BookController } from './presentation/BookController.js';
 import { HealthController } from './presentation/HealthController.js';
+
 import { MemberController } from './presentation/MemberController.js';
 import { createBookRoutes, createMemberFormRoutes, createMemberRoutes } from './presentation/routes.js';
 import { WebController } from './presentation/WebController.js';
@@ -37,6 +38,30 @@ const hbs = create({
       if (!date) return '';
       return new Date(date).toLocaleDateString();
     },
+    statusClass: (status: string) => {
+      switch (status) {
+        case 'available':
+          return 'bg-success';
+        case 'borrowed':
+          return 'bg-warning';
+        case 'maintenance':
+          return 'bg-danger';
+        default:
+          return 'bg-secondary';
+      }
+    },
+    statusIcon: (status: string) => {
+      switch (status) {
+        case 'available':
+          return 'fas fa-check';
+        case 'borrowed':
+          return 'fas fa-user';
+        case 'maintenance':
+          return 'fas fa-wrench';
+        default:
+          return 'fas fa-question';
+      }
+    },
   },
 });
 
@@ -63,6 +88,7 @@ const healthController = new HealthController();
 
 // API Routes (with /api prefix)
 app.use('/api/books', createBookRoutes(bookController));
+
 app.use('/api/members', createMemberRoutes(memberController));
 
 // Form handling routes (for web application forms with redirects)

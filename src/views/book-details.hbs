@@ -22,9 +22,20 @@
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">{{book.title}}</h3>
-                    <span class="badge {{#if book.available}}bg-success{{else}}bg-warning{{/if}} fs-6">
-                        {{#if book.available}}Available{{else}}Checked Out{{/if}}
-                    </span>
+                    <div class="d-flex gap-2">
+                        <span class="badge {{#if book.available}}bg-success{{else}}bg-danger{{/if}} fs-6">
+                            {{#if book.available}}Available{{else}}All Checked Out{{/if}}
+                        </span>
+                        {{#if book.totalCopies}}
+                        <span class="badge bg-info fs-6">
+                            {{book.availableCopies}}/{{book.totalCopies}} copies
+                        </span>
+                        {{else}}
+                        <span class="badge bg-secondary fs-6">
+                            No copies
+                        </span>
+                        {{/if}}
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -111,32 +122,57 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-6">
+                <div class="row text-center mb-3">
+                    <div class="col-3">
                         <div class="statistic">
-                            <h3 class="text-primary">{{book.totalCopies}}</h3>
-                            <p class="mb-0">Total Copies</p>
+                            <h4 class="text-primary">{{book.totalCopies}}</h4>
+                            <small class="text-muted">Total</small>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-3">
                         <div class="statistic">
-                            <h3 class="{{#if book.available}}text-success{{else}}text-warning{{/if}}">
-                                {{book.availableCopies}}
-                            </h3>
-                            <p class="mb-0">Available</p>
+                            <h4 class="text-success">{{book.availableCopies}}</h4>
+                            <small class="text-muted">Available</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="statistic">
+                            <h4 class="text-warning">{{book.checkedOutCopies}}</h4>
+                            <small class="text-muted">Checked Out</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="statistic">
+                            <h4 class="text-danger">{{book.maintenanceCopies}}</h4>
+                            <small class="text-muted">Maintenance</small>
                         </div>
                     </div>
                 </div>
 
+                {{#if book.totalCopies}}
+                <!-- Individual Copy Status -->
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2">Copy Status:</h6>
+                    <div class="d-flex flex-wrap gap-1">
+                        {{#each book.copies}}
+                        <span class="badge {{statusClass status}} fs-6">
+                            <i class="{{statusIcon status}}"></i>
+                            Copy #{{copy_number}} - {{status}} ({{condition}})
+                        </span>
+                        {{/each}}
+                    </div>
+                </div>
+                {{/if}}
+
                 {{#if book.available}}
-                <div class="mt-3">
-                    <button class="btn btn-success w-100">
+                <div class="d-grid">
+                    <button class="btn btn-success">
                         <i class="fas fa-check"></i> Available for Checkout
                     </button>
                 </div>
                 {{else}}
-                <div class="mt-3">
-                    <button class="btn btn-warning w-100" disabled>
+                <div class="d-grid">
+                    <button class="btn btn-warning" disabled>
                         <i class="fas fa-clock"></i> All Copies Checked Out
                     </button>
                 </div>
