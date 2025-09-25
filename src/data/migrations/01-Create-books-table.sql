@@ -1,5 +1,5 @@
 CREATE TABLE books (
-    id TEXT PRIMARY KEY ,
+    id TEXT PRIMARY KEY,
     author VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL
 );
