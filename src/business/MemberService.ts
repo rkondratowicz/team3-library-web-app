@@ -202,10 +202,10 @@ export class MemberService implements IMemberService {
    */
   async updateMember(
     id: string,
-    memberData: { 
-      memberName?: string; 
-      email?: string; 
-      phone?: string; 
+    memberData: {
+      memberName?: string;
+      email?: string;
+      phone?: string;
       memAddress?: string;
       status?: string;
       max_books?: number;
