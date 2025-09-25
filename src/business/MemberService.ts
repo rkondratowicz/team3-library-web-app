@@ -7,8 +7,16 @@ export interface IMemberService {
   getAllMembers(): Promise<{ success: boolean; data?: Member[]; error?: string }>;
   searchMembers(searchTerm: string): Promise<{ success: boolean; data?: Member[]; error?: string }>;
   getMemberById(id: string): Promise<{ success: boolean; data?: Member; error?: string }>;
-  createMember(memberData: { memberName: string; email: string; phone?: string; memAddress?: string }): Promise<{ success: boolean; data?: Member; error?: string }>;
-  updateMember(id: string, memberData: { memberName?: string; email?: string; phone?: string; memAddress?: string }): Promise<{ success: boolean; data?: Member; error?: string }>;
+  createMember(memberData: {
+    memberName: string;
+    email: string;
+    phone?: string;
+    memAddress?: string;
+  }): Promise<{ success: boolean; data?: Member; error?: string }>;
+  updateMember(
+    id: string,
+    memberData: { memberName?: string; email?: string; phone?: string; memAddress?: string },
+  ): Promise<{ success: boolean; data?: Member; error?: string }>;
   deleteMember(id: string): Promise<{ success: boolean; error?: string }>;
 }
 
@@ -18,15 +26,12 @@ export class MemberService implements IMemberService {
   constructor() {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    
-    this.db = new sqlite3.Database(
-      join(__dirname, '../../library.db'),
-      (err) => {
-        if (err) {
-          console.error('Error opening member database:', err);
-        }
+
+    this.db = new sqlite3.Database(join(__dirname, '../../library.db'), (err) => {
+      if (err) {
+        console.error('Error opening member database:', err);
       }
-    );
+    });
   }
 
   /**
@@ -63,7 +68,9 @@ export class MemberService implements IMemberService {
   /**
    * Search members by name, email, or phone
    */
-  async searchMembers(searchTerm: string): Promise<{ success: boolean; data?: Member[]; error?: string }> {
+  async searchMembers(
+    searchTerm: string,
+  ): Promise<{ success: boolean; data?: Member[]; error?: string }> {
     if (!searchTerm || typeof searchTerm !== 'string') {
       return this.getAllMembers();
     }
@@ -142,7 +149,12 @@ export class MemberService implements IMemberService {
   /**
    * Create new member
    */
-  async createMember(memberData: { memberName: string; email: string; phone?: string; memAddress?: string }): Promise<{ success: boolean; data?: Member; error?: string }> {
+  async createMember(memberData: {
+    memberName: string;
+    email: string;
+    phone?: string;
+    memAddress?: string;
+  }): Promise<{ success: boolean; data?: Member; error?: string }> {
     if (!memberData.memberName?.trim()) {
       return { success: false, error: 'Member name is required' };
     }
@@ -177,7 +189,7 @@ export class MemberService implements IMemberService {
           }
         } else {
           // Fetch the created member
-          this.getMemberById(id).then(result => {
+          this.getMemberById(id).then((result) => {
             resolve(result);
           });
         }
@@ -188,7 +200,10 @@ export class MemberService implements IMemberService {
   /**
    * Update member
    */
-  async updateMember(id: string, memberData: { memberName?: string; email?: string; phone?: string; memAddress?: string }): Promise<{ success: boolean; data?: Member; error?: string }> {
+  async updateMember(
+    id: string,
+    memberData: { memberName?: string; email?: string; phone?: string; memAddress?: string },
+  ): Promise<{ success: boolean; data?: Member; error?: string }> {
     if (!id) {
       return { success: false, error: 'Member ID is required' };
     }
@@ -228,7 +243,7 @@ export class MemberService implements IMemberService {
     return new Promise((resolve) => {
       const query = `UPDATE members SET ${updateFields.join(', ')} WHERE ID = ?`;
 
-      this.db.run(query, params, function(err) {
+      this.db.run(query, params, function (err) {
         if (err) {
           console.error('Error updating member:', err);
           if (err.message.includes('UNIQUE constraint failed')) {
@@ -256,8 +271,8 @@ export class MemberService implements IMemberService {
 
     return new Promise((resolve) => {
       const query = 'DELETE FROM members WHERE ID = ?';
-      
-      this.db.run(query, [id], function(err) {
+
+      this.db.run(query, [id], function (err) {
         if (err) {
           console.error('Error deleting member:', err);
           resolve({ success: false, error: 'Failed to delete member' });

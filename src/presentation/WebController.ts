@@ -6,7 +6,10 @@ import type { Member } from '../shared/types.js';
 
 
 export class WebController {
-  constructor(private bookService: IBookService, private memberService?: IMemberService) {}
+  constructor(
+    private bookService: IBookService,
+    private memberService?: IMemberService,
+  ) {}
 
   // Helper method to convert book data for template rendering
   private mapBookForTemplate(book: Book) {
@@ -258,7 +261,7 @@ export class WebController {
     try {
       const searchTerm = req.query.search as string;
       let result: { success: boolean; data?: Member[]; error?: string };
-      
+
       if (searchTerm?.trim()) {
         result = await this.memberService.searchMembers(searchTerm);
       } else {
