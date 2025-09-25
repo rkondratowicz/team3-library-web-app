@@ -34,11 +34,10 @@ export class BookRepository implements IBookRepository {
 
   private enhanceBookWithCopyInfo(book: BookDbRow): Book {
     const enhanced: Book = {
-      ...book,
-      // Map database fields to UI-friendly names
-      category: book.genre,
-      publishedYear: book.publication_year,
-      // Will be populated by getBookCopiesCount
+      id: book.id,
+      author: book.author,
+      title: book.title,
+      // Default values for optional fields
       totalCopies: 1,
       availableCopies: 1,
       available: true,
@@ -50,14 +49,8 @@ export class BookRepository implements IBookRepository {
     return new Promise((resolve, reject) => {
       this.db.all(
         `
-        SELECT 
-          b.*,
-          COUNT(bc.id) as total_copies,
-          SUM(CASE WHEN bc.status = 'available' THEN 1 ELSE 0 END) as available_copies
-        FROM books b
-        LEFT JOIN book_copies bc ON b.id = bc.book_id
-        GROUP BY b.id
-        ORDER BY b.author, b.title
+        SELECT * FROM books 
+        ORDER BY author, title
       `,
         [],
         async (err: Error | null, rows: BookDbRow[]) => {
@@ -82,14 +75,8 @@ export class BookRepository implements IBookRepository {
     return new Promise((resolve, reject) => {
       this.db.get(
         `
-        SELECT 
-          b.*,
-          COUNT(bc.id) as total_copies,
-          SUM(CASE WHEN bc.status = 'available' THEN 1 ELSE 0 END) as available_copies
-        FROM books b
-        LEFT JOIN book_copies bc ON b.id = bc.book_id
-        WHERE b.id = ?
-        GROUP BY b.id
+        SELECT * FROM books 
+        WHERE id = ?
       `,
         [id],
         (err: Error | null, row: BookDbRow) => {
