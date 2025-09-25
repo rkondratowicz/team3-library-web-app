@@ -88,6 +88,44 @@ export interface GreetingResponse {
   message: string;
 }
 
+// Member interfaces
+export interface Member {
+  id: string;
+  memberName: string;
+  email: string;
+  phone?: string;
+  memAddress?: string;
+  status?: 'active' | 'suspended' | 'inactive';
+  max_books?: number;
+  member_since?: string;
+  updated_at?: string;
+}
+
+export interface CreateMemberRequest {
+  memberName: string;
+  email: string;
+  phone?: string;
+  memAddress?: string;
+  max_books?: number;
+}
+
+export interface UpdateMemberRequest {
+  memberName?: string;
+  email?: string;
+  phone?: string;
+  memAddress?: string;
+  status?: 'active' | 'suspended' | 'inactive';
+  max_books?: number;
+}
+
+export interface MemberResponse {
+  member: Member;
+}
+
+export interface MembersResponse {
+  members: Member[];
+}
+
 // Business layer result type
 export interface BusinessResult<T> {
   success: boolean;
