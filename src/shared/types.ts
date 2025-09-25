@@ -10,12 +10,6 @@ export interface Book {
   description?: string;
   created_at?: string;
   updated_at?: string;
-  // Computed properties
-  available?: boolean;
-  totalCopies?: number;
-  availableCopies?: number;
-  category?: string; // Alias for genre for UI consistency
-  publishedYear?: number; // Alias for publication_year for UI consistency
 }
 
 export interface BookCopy {
@@ -24,8 +18,43 @@ export interface BookCopy {
   copy_number: number;
   status: 'available' | 'borrowed' | 'maintenance';
   condition: 'excellent' | 'good' | 'fair' | 'poor';
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateBookCopyRequest {
+  book_id: string;
+  condition?: 'excellent' | 'good' | 'fair' | 'poor';
+}
+
+export interface UpdateBookCopyRequest {
+  status?: 'available' | 'borrowed' | 'maintenance';
+  condition?: 'excellent' | 'good' | 'fair' | 'poor';
+}
+
+export interface BookWithCopies extends Book {
+  copies: BookCopy[];
+  total_copies: number;
+  available_copies: number;
+}
+
+export interface BookAvailability {
+  book_id: string;
+  total_copies: number;
+  available_copies: number;
+  borrowed_copies: number;
+  maintenance_copies: number;
+}
+
+export interface BookSearchFilters {
+  title?: string;
+  author?: string;
+  isbn?: string;
+  genre?: string;
+  publication_year?: number;
+  available_only?: boolean;
+  limit?: number;
+  offset?: number;
 }
 
 // Database row types (raw data from SQLite)
@@ -51,9 +80,6 @@ export interface CreateBookRequest {
   genre?: string;
   publication_year?: number;
   description?: string;
-  category?: string; // Will be mapped to genre
-  publishedYear?: number; // Will be mapped to publication_year
-  totalCopies?: number;
 }
 
 export interface UpdateBookRequest {
@@ -63,11 +89,6 @@ export interface UpdateBookRequest {
   genre?: string;
   publication_year?: number;
   description?: string;
-  category?: string; // Will be mapped to genre
-  publishedYear?: number; // Will be mapped to publication_year
-  totalCopies?: number;
-  available?: boolean;
-  availableCopies?: number;
 }
 
 // Response types
@@ -77,6 +98,36 @@ export interface BooksResponse {
 
 export interface BookResponse {
   book: Book;
+}
+
+export interface BookWithCopiesResponse {
+  book: BookWithCopies;
+}
+
+export interface BookCopyResponse {
+  copy: BookCopy;
+}
+
+export interface BookCopiesResponse {
+  copies: BookCopy[];
+}
+
+export interface BookSearchResponse {
+  books: Book[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface BookInventoryResponse {
+  inventory: BookAvailability[];
+  summary: {
+    total_books: number;
+    total_copies: number;
+    available_copies: number;
+    borrowed_copies: number;
+    maintenance_copies: number;
+  };
 }
 
 export interface ErrorResponse {

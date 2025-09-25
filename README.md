@@ -68,4 +68,4 @@ The project is configured with:
 - `biome.json` - Biome configuration for formatting and linting
 - `.biomeignore` - Files to ignore during Biome checks
 - `package.json` - Project dependencies and scripts
-- `.vscode/` - VS Code workspace settings and extension recommendations
+- `.vscode/` - VS Code workspace settings and extension recommendations# Test comment

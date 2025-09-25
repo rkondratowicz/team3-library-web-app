@@ -1,8 +1,19 @@
 import type { Request, Response } from 'express';
 import type { IBookService } from '../business/BookService.js';
+import type { Book } from '../shared/types.js';
 
 export class WebController {
   constructor(private bookService: IBookService) {}
+
+  // Helper method to convert book data for template rendering
+  private mapBookForTemplate(book: Book) {
+    return {
+      ...book,
+      updatedAt: book.updated_at,
+      publishedYear: book.publication_year,
+      category: book.genre,
+    };
+  }
 
   // GET / - Home page
   home = async (_req: Request, res: Response): Promise<void> => {
@@ -11,17 +22,35 @@ export class WebController {
 
       const stats = {
         totalBooks: 0,
-        availableBooks: 0,
-        checkedOut: 0,
+        totalCopies: 0,
+        availableCopies: 0,
+        checkedOutCopies: 0,
         uniqueAuthors: 0,
+        booksWithCopies: 0,
       };
 
       if (result.success && result.data) {
         const books = result.data;
         stats.totalBooks = books.length;
-        stats.availableBooks = books.filter((book) => book.available).length;
-        stats.checkedOut = stats.totalBooks - stats.availableBooks;
         stats.uniqueAuthors = new Set(books.map((book) => book.author)).size;
+
+        // Get copy statistics for all books
+        for (const book of books) {
+          try {
+            const copiesResult = await this.bookService.getBookCopies(book.id);
+            if (copiesResult.success && copiesResult.data) {
+              const copies = copiesResult.data;
+              if (copies.length > 0) {
+                stats.booksWithCopies++;
+              }
+              stats.totalCopies += copies.length;
+              stats.availableCopies += copies.filter((copy) => copy.status === 'available').length;
+              stats.checkedOutCopies += copies.filter((copy) => copy.status === 'borrowed').length;
+            }
+          } catch (error) {
+            console.error(`Error getting copies for book ${book.id}:`, error);
+          }
+        }
       }
 
       res.render('home', {
@@ -44,9 +73,43 @@ export class WebController {
       const result = await this.bookService.getAllBooks();
 
       if (result.success && result.data) {
+        // Get copy information for each book
+        const booksWithCopyInfo = await Promise.all(
+          result.data.map(async (book) => {
+            try {
+              const copiesResult = await this.bookService.getAvailableCopies(book.id);
+              const totalCopiesResult = await this.bookService.getBookCopies(book.id);
+
+              const availableCopies =
+                copiesResult.success && copiesResult.data ? copiesResult.data.length : 0;
+              const totalCopies =
+                totalCopiesResult.success && totalCopiesResult.data
+                  ? totalCopiesResult.data.length
+                  : 0;
+
+              return {
+                ...book,
+                available: availableCopies > 0,
+                availableCopies,
+                totalCopies,
+                checkedOutCopies: totalCopies - availableCopies,
+              };
+            } catch (error) {
+              console.error(`Error getting copy info for book ${book.id}:`, error);
+              return {
+                ...book,
+                available: false,
+                availableCopies: 0,
+                totalCopies: 0,
+                checkedOutCopies: 0,
+              };
+            }
+          }),
+        );
+
         res.render('books', {
           title: 'Books',
-          books: result.data,
+          books: booksWithCopyInfo,
         });
       } else {
         res.render('books', {
@@ -79,10 +142,60 @@ export class WebController {
       const result = await this.bookService.getBookById(id);
 
       if (result.success && result.data) {
-        res.render('book-details', {
-          title: result.data.title,
-          book: result.data,
-        });
+        const book = result.data;
+
+        // Get copy information for this book
+        try {
+          const copiesResult = await this.bookService.getBookCopies(book.id);
+          const availableCopiesResult = await this.bookService.getAvailableCopies(book.id);
+
+          const totalCopies =
+            copiesResult.success && copiesResult.data ? copiesResult.data.length : 0;
+          const availableCopies =
+            availableCopiesResult.success && availableCopiesResult.data
+              ? availableCopiesResult.data.length
+              : 0;
+          const maintenanceCopies =
+            copiesResult.success && copiesResult.data
+              ? copiesResult.data.filter((copy) => copy.status === 'maintenance').length
+              : 0;
+          const checkedOutCopies =
+            copiesResult.success && copiesResult.data
+              ? copiesResult.data.filter((copy) => copy.status === 'borrowed').length
+              : 0;
+
+          const bookWithCopyInfo = {
+            ...this.mapBookForTemplate(book),
+            available: availableCopies > 0,
+            totalCopies,
+            availableCopies,
+            checkedOutCopies,
+            maintenanceCopies,
+            copies: copiesResult.success && copiesResult.data ? copiesResult.data : [],
+          };
+
+          res.render('book-details', {
+            title: book.title,
+            book: bookWithCopyInfo,
+          });
+        } catch (copyError) {
+          console.error(`Error getting copy info for book ${book.id}:`, copyError);
+          // Fallback to book without copy info
+          const bookWithCopyInfo = {
+            ...this.mapBookForTemplate(book),
+            available: false,
+            totalCopies: 0,
+            availableCopies: 0,
+            checkedOutCopies: 0,
+            maintenanceCopies: 0,
+            copies: [],
+          };
+
+          res.render('book-details', {
+            title: book.title,
+            book: bookWithCopyInfo,
+          });
+        }
       } else {
         res.status(404).render('error', {
           title: 'Book Not Found',

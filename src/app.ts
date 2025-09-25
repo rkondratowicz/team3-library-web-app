@@ -6,7 +6,7 @@ import { BookService } from './business/BookService.js';
 import { BookRepository } from './data/BookRepository.js';
 import { BookController } from './presentation/BookController.js';
 import { HealthController } from './presentation/HealthController.js';
-import { createBookRoutes } from './presentation/routes.js';
+import { createBookRoutes, createCopyRoutes } from './presentation/routes.js';
 import { WebController } from './presentation/WebController.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,6 +31,30 @@ const hbs = create({
       if (!date) return '';
       return new Date(date).toLocaleDateString();
     },
+    statusClass: (status: string) => {
+      switch (status) {
+        case 'available':
+          return 'bg-success';
+        case 'borrowed':
+          return 'bg-warning';
+        case 'maintenance':
+          return 'bg-danger';
+        default:
+          return 'bg-secondary';
+      }
+    },
+    statusIcon: (status: string) => {
+      switch (status) {
+        case 'available':
+          return 'fas fa-check';
+        case 'borrowed':
+          return 'fas fa-user';
+        case 'maintenance':
+          return 'fas fa-wrench';
+        default:
+          return 'fas fa-question';
+      }
+    },
   },
 });
 
@@ -53,6 +77,7 @@ const healthController = new HealthController();
 
 // API Routes (with /api prefix)
 app.use('/api/books', createBookRoutes(bookController));
+app.use('/api/copies', createCopyRoutes(bookController));
 app.get('/api/health', healthController.healthCheck);
 app.get('/api/greet', healthController.greet);
 
