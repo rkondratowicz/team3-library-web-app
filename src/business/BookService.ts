@@ -48,7 +48,7 @@ export interface IBookService {
 }
 
 export class BookService implements IBookService {
-  constructor(private bookRepository: IBookRepository) { }
+  constructor(private bookRepository: IBookRepository) {}
 
   async getAllBooks(): Promise<BusinessResult<Book[]>> {
     try {
@@ -247,27 +247,27 @@ export class BookService implements IBookService {
 
       // Apply filters
       if (filters.title) {
-        books = books.filter(book =>
-          book.title.toLowerCase().includes(filters.title!.toLowerCase())
+        books = books.filter((book) =>
+          book.title.toLowerCase().includes(filters.title!.toLowerCase()),
         );
       }
 
       if (filters.author) {
-        books = books.filter(book =>
-          book.author.toLowerCase().includes(filters.author!.toLowerCase())
+        books = books.filter((book) =>
+          book.author.toLowerCase().includes(filters.author!.toLowerCase()),
         );
       }
 
       if (filters.isbn) {
-        books = books.filter(book => book.isbn === filters.isbn);
+        books = books.filter((book) => book.isbn === filters.isbn);
       }
 
       if (filters.genre) {
-        books = books.filter(book => book.genre === filters.genre);
+        books = books.filter((book) => book.genre === filters.genre);
       }
 
       if (filters.publication_year) {
-        books = books.filter(book => book.publication_year === filters.publication_year);
+        books = books.filter((book) => book.publication_year === filters.publication_year);
       }
 
       // Apply availability filter if requested
@@ -406,7 +406,7 @@ export class BookService implements IBookService {
 
       // Get all copies for this book
       const copies = await this.bookRepository.getBookCopies(id);
-      const availableCopies = copies.filter(copy => copy.status === 'available');
+      const availableCopies = copies.filter((copy) => copy.status === 'available');
 
       const bookWithCopies: BookWithCopies = {
         ...book,
@@ -437,7 +437,7 @@ export class BookService implements IBookService {
 
       for (const book of books) {
         const copies = await this.bookRepository.getBookCopies(book.id);
-        const availableCopies = copies.filter(copy => copy.status === 'available');
+        const availableCopies = copies.filter((copy) => copy.status === 'available');
 
         const bookWithCopies: BookWithCopies = {
           ...book,
@@ -772,9 +772,9 @@ export class BookService implements IBookService {
 
       for (const book of books) {
         const copies = await this.bookRepository.getBookCopies(book.id);
-        const availableCopies = copies.filter(copy => copy.status === 'available').length;
-        const borrowedCopies = copies.filter(copy => copy.status === 'borrowed').length;
-        const maintenanceCopies = copies.filter(copy => copy.status === 'maintenance').length;
+        const availableCopies = copies.filter((copy) => copy.status === 'available').length;
+        const borrowedCopies = copies.filter((copy) => copy.status === 'borrowed').length;
+        const maintenanceCopies = copies.filter((copy) => copy.status === 'maintenance').length;
 
         const availability: BookAvailability = {
           book_id: book.id,
@@ -823,9 +823,9 @@ export class BookService implements IBookService {
       }
 
       const copies = await this.bookRepository.getBookCopies(bookId);
-      const availableCopies = copies.filter(copy => copy.status === 'available').length;
-      const borrowedCopies = copies.filter(copy => copy.status === 'borrowed').length;
-      const maintenanceCopies = copies.filter(copy => copy.status === 'maintenance').length;
+      const availableCopies = copies.filter((copy) => copy.status === 'available').length;
+      const borrowedCopies = copies.filter((copy) => copy.status === 'borrowed').length;
+      const maintenanceCopies = copies.filter((copy) => copy.status === 'maintenance').length;
 
       const availability: BookAvailability = {
         book_id: bookId,
