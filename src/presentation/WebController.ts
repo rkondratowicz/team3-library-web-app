@@ -93,7 +93,7 @@ export class WebController {
                   : 0;
 
               return {
-                ...book,
+                ...this.mapBookForTemplate(book),
                 available: availableCopies > 0,
                 availableCopies,
                 totalCopies,
@@ -102,7 +102,7 @@ export class WebController {
             } catch (error) {
               console.error(`Error getting copy info for book ${book.id}:`, error);
               return {
-                ...book,
+                ...this.mapBookForTemplate(book),
                 available: false,
                 availableCopies: 0,
                 totalCopies: 0,
@@ -112,9 +112,15 @@ export class WebController {
           }),
         );
 
+        // Get unique categories from books
+        const categories = [
+          ...new Set(result.data.map((book) => book.genre).filter(Boolean)),
+        ].sort();
+
         res.render('books', {
           title: 'Books',
           books: booksWithCopyInfo,
+          categories: categories,
         });
       } else {
         res.render('books', {
