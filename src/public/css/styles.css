@@ -435,3 +435,14 @@ footer {
   color: var(--secondary-color);
   font-size: 0.9rem;
 }
+
+/* Copy availability clickable badges */
+.copy-clickable {
+  transition: all 0.2s ease;
+}
+
+.copy-clickable:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+  filter: brightness(1.1);
+}

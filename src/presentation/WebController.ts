@@ -157,7 +157,7 @@ export class WebController {
 
         // Get copy information for this book
         try {
-          const copiesResult = await this.bookService.getBookCopies(book.id);
+          const copiesResult = await this.bookService.getBookCopiesWithBorrowers(book.id);
           const availableCopiesResult = await this.bookService.getAvailableCopies(book.id);
 
           const totalCopies =

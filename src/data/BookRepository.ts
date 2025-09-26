@@ -4,6 +4,7 @@ import sqlite3 from 'sqlite3';
 import type {
   Book,
   BookCopy,
+  BookCopyWithBorrower,
   BookDbRow,
   Borrowing,
   CreateBorrowingRequest,
@@ -19,6 +20,7 @@ export interface IBookRepository {
 
   // Book copy methods
   getBookCopies(bookId: string): Promise<BookCopy[]>;
+  getBookCopiesWithBorrowers(bookId: string): Promise<BookCopyWithBorrower[]>;
   getBookCopyById(copyId: string): Promise<BookCopy | null>;
   createBookCopy(bookCopy: BookCopy): Promise<void>;
   updateBookCopy(copyId: string, updates: Partial<BookCopy>): Promise<boolean>;
@@ -248,6 +250,65 @@ export class BookRepository implements IBookRepository {
             created_at: row.created_at,
             updated_at: row.updated_at,
           }));
+          resolve(copies);
+        }
+      });
+    });
+  }
+
+  async getBookCopiesWithBorrowers(bookId: string): Promise<BookCopyWithBorrower[]> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT 
+          bc.id, 
+          bc.book_id, 
+          bc.copy_number, 
+          bc.status, 
+          bc.condition, 
+          bc.created_at, 
+          bc.updated_at,
+          b.id as borrowing_id,
+          b.member_id,
+          b.borrowed_date,
+          b.due_date,
+          m.memberName,
+          m.email
+        FROM book_copies bc
+        LEFT JOIN borrowings b ON bc.id = b.book_copy_id AND b.status = 'active'
+        LEFT JOIN members m ON b.member_id = m.id
+        WHERE bc.book_id = ? 
+        ORDER BY bc.copy_number ASC
+      `;
+
+      this.db.all(sql, [bookId], (err: Error | null, rows: any[]) => {
+        if (err) {
+          console.error('Database error:', err.message);
+          reject(err);
+        } else {
+          const copies: BookCopyWithBorrower[] = rows.map((row) => {
+            const copy: BookCopyWithBorrower = {
+              id: row.id,
+              book_id: row.book_id,
+              copy_number: row.copy_number,
+              status: row.status,
+              condition: row.condition,
+              created_at: row.created_at,
+              updated_at: row.updated_at,
+            };
+
+            // Add borrower information if the copy is borrowed
+            if (row.borrowing_id && row.member_id) {
+              copy.borrower = {
+                id: row.member_id,
+                name: row.memberName,
+                email: row.email,
+                borrowed_date: row.borrowed_date,
+                due_date: row.due_date,
+              };
+            }
+
+            return copy;
+          });
           resolve(copies);
         }
       });

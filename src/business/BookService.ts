@@ -4,6 +4,7 @@ import type {
   Book,
   BookAvailability,
   BookCopy,
+  BookCopyWithBorrower,
   BookSearchFilters,
   BookWithCopies,
   Borrowing,
@@ -37,6 +38,7 @@ export interface IBookService {
   updateBookCopyStatus(copyId: string, status: string): Promise<BusinessResult<BookCopy>>;
   updateBookCopyCondition(copyId: string, condition: string): Promise<BusinessResult<BookCopy>>;
   getBookCopies(bookId: string): Promise<BusinessResult<BookCopy[]>>;
+  getBookCopiesWithBorrowers(bookId: string): Promise<BusinessResult<BookCopyWithBorrower[]>>;
   getAvailableCopies(bookId: string): Promise<BusinessResult<BookCopy[]>>;
 
   // Inventory and availability methods
@@ -727,6 +729,42 @@ export class BookService implements IBookService {
       return {
         success: false,
         error: 'Failed to fetch book copies',
+        statusCode: 500,
+      };
+    }
+  }
+
+  async getBookCopiesWithBorrowers(bookId: string): Promise<BusinessResult<BookCopyWithBorrower[]>> {
+    try {
+      if (!this.isValidUUID(bookId)) {
+        return {
+          success: false,
+          error: 'Invalid book ID format',
+          statusCode: 400,
+        };
+      }
+
+      // Check if book exists first
+      const bookExists = await this.bookRepository.bookExists(bookId);
+      if (!bookExists) {
+        return {
+          success: false,
+          error: 'Book not found',
+          statusCode: 404,
+        };
+      }
+
+      const copies = await this.bookRepository.getBookCopiesWithBorrowers(bookId);
+      return {
+        success: true,
+        data: copies,
+        statusCode: 200,
+      };
+    } catch (error) {
+      console.error('Error in BookService.getBookCopiesWithBorrowers:', error);
+      return {
+        success: false,
+        error: 'Failed to fetch book copies with borrower information',
         statusCode: 500,
       };
     }
