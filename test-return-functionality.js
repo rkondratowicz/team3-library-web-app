@@ -36,15 +36,15 @@ async function testReturnBook() {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      redirect: 'manual' // Don't follow redirects to see the response
+      redirect: 'manual', // Don't follow redirects to see the response
     });
 
     if (returnResponse.status === 302) {
       const location = returnResponse.headers.get('location');
       console.log('✅ Return request successful, redirecting to:', location);
-      
+
       // Check if the redirect includes success message
-      if (location && location.includes('returned=success')) {
+      if (location?.includes('returned=success')) {
         console.log('✅ Success message included in redirect');
       }
     } else {
@@ -60,7 +60,6 @@ async function testReturnBook() {
     console.log(`   - Book page: ${BASE_URL}/books/550e8400-e29b-41d4-a716-446655440003`);
     console.log('   - The book should no longer appear in borrowed books');
     console.log('   - Available copies count should have increased');
-
   } catch (error) {
     console.error('❌ Test failed with error:', error.message);
   }

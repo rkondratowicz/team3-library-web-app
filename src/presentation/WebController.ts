@@ -333,7 +333,12 @@ export class WebController {
       const result = await this.memberService.getMemberWithBorrowings(id);
 
       if (result.success && result.data) {
-        const renderData: any = {
+        const renderData: {
+          title: string;
+          member: typeof result.data;
+          successMessage?: string;
+          errorMessage?: string;
+        } = {
           title: `Member - ${result.data.memberName}`,
           member: result.data,
         };
@@ -572,7 +577,9 @@ export class WebController {
         // Redirect with error message
         const memberId = req.body.memberId || req.query.memberId;
         const redirectUrl = memberId ? `/members/${memberId}` : '/members';
-        res.redirect(`${redirectUrl}?error=${encodeURIComponent(result.error || 'Failed to return book')}`);
+        res.redirect(
+          `${redirectUrl}?error=${encodeURIComponent(result.error || 'Failed to return book')}`,
+        );
       }
     } catch (error) {
       console.error('Error in WebController.returnBook:', error);
