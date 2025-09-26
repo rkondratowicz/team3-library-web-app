@@ -206,6 +206,38 @@ export interface MemberSearchResponse {
   hasMore: boolean;
 }
 
+// Borrowing interfaces
+export interface Borrowing {
+  id: string;
+  member_id: string;
+  book_copy_id: string;
+  borrowed_date: string;
+  due_date: string;
+  returned_date?: string;
+  renewal_count: number;
+  status: 'active' | 'returned' | 'overdue' | 'lost';
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateBorrowingRequest {
+  member_id: string;
+  book_copy_id: string;
+  borrowed_date?: string;
+  due_date?: string;
+  notes?: string;
+}
+
+export interface BorrowingResponse {
+  borrowing: Borrowing;
+}
+
+export interface BorrowingsResponse {
+  borrowings: Borrowing[];
+  total?: number;
+}
+
 // Business layer result type
 export interface BusinessResult<T> {
   success: boolean;
