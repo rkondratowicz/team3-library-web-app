@@ -644,4 +644,67 @@ export class BookController {
       });
     }
   };
+
+  // POST /books/:id/checkout - Checkout a book to a member
+  checkoutBook = async (
+    req: Request,
+    res: Response<{ success: boolean; message: string } | ErrorResponse>,
+  ): Promise<void> => {
+    try {
+      const { id: bookId } = req.params;
+      const { memberId } = req.body;
+
+      if (!memberId) {
+        res.status(400).json({
+          error: 'Member ID is required',
+          details: 'Please provide a valid member ID for checkout',
+        });
+        return;
+      }
+
+      // Get available copies for this book
+      const availableCopiesResult = await this.bookService.getAvailableCopies(bookId);
+
+      if (
+        !availableCopiesResult.success ||
+        !availableCopiesResult.data ||
+        availableCopiesResult.data.length === 0
+      ) {
+        res.status(400).json({
+          error: 'No available copies',
+          details: 'There are no available copies of this book for checkout',
+        });
+        return;
+      }
+
+      // Get the first available copy
+      const availableCopy = availableCopiesResult.data[0];
+
+      // Update the copy status to borrowed
+      const updateResult = await this.bookService.updateBookCopyStatus(
+        availableCopy.id,
+        'borrowed',
+      );
+
+      if (updateResult.success) {
+        // TODO: Create a borrowing record in the borrowings table
+        // For now, we'll just update the copy status
+        res.status(200).json({
+          success: true,
+          message: 'Book successfully checked out',
+        });
+      } else {
+        res.status(500).json({
+          error: 'Checkout failed',
+          details: updateResult.error || 'Failed to update book copy status',
+        });
+      }
+    } catch (error) {
+      console.error('Error in BookController.checkoutBook:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        details: 'An unexpected error occurred during checkout',
+      });
+    }
+  };
 }

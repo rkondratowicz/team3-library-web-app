@@ -378,6 +378,42 @@ body {
   flex: 2;
 }
 
+/* Member Selection Page */
+.member-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.member-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.checkout-member-btn {
+  transition: all 0.2s ease;
+}
+
+.checkout-member-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+}
+
+/* Book info card in checkout */
+.bg-light .card-body {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+/* Loading state for checkout button */
+.checkout-member-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Animation for modal */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out;
+}
+
 /* Footer */
 footer {
   margin-top: auto;
