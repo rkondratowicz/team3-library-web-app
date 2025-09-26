@@ -72,18 +72,80 @@
         </div>
       </div>
 
-      <!-- Borrowing History Section (placeholder) -->
+      <!-- Current Borrowings Section -->
       <div class="card mb-4">
         <div class="card-header">
           <h5 class="card-title mb-0">
-            <i class="bi bi-book"></i> Borrowing History
+            <i class="bi bi-book"></i> Currently Borrowed Books
           </h5>
         </div>
         <div class="card-body">
-          <div class="text-center py-4 text-muted">
-            <i class="bi bi-books display-1"></i>
-            <p class="mt-3">Borrowing history feature coming soon...</p>
-          </div>
+          {{#if member.current_borrowings.length}}
+            <div class="row g-3">
+              {{#each member.current_borrowings}}
+              <div class="col-12">
+                <div class="card border-{{#if is_overdue}}danger{{else}}light{{/if}}">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-md-8">
+                        <h6 class="card-title mb-1">{{book_title}}</h6>
+                        <p class="text-muted mb-2">
+                          <i class="bi bi-person"></i> {{book_author}}
+                          {{#if book_isbn}}
+                            <span class="ms-3"><i class="bi bi-upc"></i> {{book_isbn}}</span>
+                          {{/if}}
+                          <span class="ms-3"><i class="bi bi-hash"></i> Copy #{{copy_number}}</span>
+                        </p>
+                        <div class="d-flex flex-wrap gap-2">
+                          <small class="text-muted">
+                            <i class="bi bi-calendar-check"></i> 
+                            Borrowed: {{formatDate borrowed_date}}
+                          </small>
+                          <small class="text-muted">
+                            <i class="bi bi-calendar-x"></i> 
+                            Due: {{formatDate due_date}}
+                          </small>
+                          {{#if renewal_count}}
+                          <small class="text-info">
+                            <i class="bi bi-arrow-repeat"></i> 
+                            Renewed {{renewal_count}} time{{#if (gt renewal_count 1)}}s{{/if}}
+                          </small>
+                          {{/if}}
+                        </div>
+                      </div>
+                      <div class="col-md-4 text-md-end">
+                        {{#if is_overdue}}
+                          <span class="badge bg-danger fs-6 mb-2">
+                            <i class="bi bi-exclamation-triangle"></i> 
+                            {{overdue_days}} day{{#if (gt overdue_days 1)}}s{{/if}} overdue
+                          </span>
+                        {{else}}
+                          <span class="badge bg-success fs-6 mb-2">
+                            <i class="bi bi-check-circle"></i> On time
+                          </span>
+                        {{/if}}
+
+                      </div>
+                    </div>
+                    {{#if notes}}
+                    <div class="mt-2">
+                      <small class="text-muted">
+                        <i class="bi bi-sticky"></i> {{notes}}
+                      </small>
+                    </div>
+                    {{/if}}
+                  </div>
+                </div>
+              </div>
+              {{/each}}
+            </div>
+          {{else}}
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-book display-4"></i>
+              <p class="mt-3 mb-0">No books currently borrowed</p>
+              <small>This member has returned all borrowed books</small>
+            </div>
+          {{/if}}
         </div>
       </div>
     </div>
@@ -113,17 +175,40 @@
           <hr>
           
           <div class="row text-center">
-            <div class="col-6">
+            <div class="col-4">
               <div class="border-end">
                 <div class="h4 mb-0 text-primary">{{member.max_books}}</div>
                 <small class="text-muted">Max Books</small>
               </div>
             </div>
-            <div class="col-6">
-              <div class="h4 mb-0 text-info">0</div>
-              <small class="text-muted">Currently Borrowed</small>
+            <div class="col-4">
+              <div class="border-end">
+                <div class="h4 mb-0 text-info">{{member.borrowing_count}}</div>
+                <small class="text-muted">Currently Borrowed</small>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="h4 mb-0 {{#if member.overdue_count}}text-danger{{else}}text-success{{/if}}">{{member.overdue_count}}</div>
+              <small class="text-muted">Overdue</small>
             </div>
           </div>
+          
+          {{#if member.overdue_count}}
+          <div class="alert alert-warning mt-3 mb-0" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Attention:</strong> This member has {{member.overdue_count}} overdue book{{#if (gt member.overdue_count 1)}}s{{/if}}.
+          </div>
+          {{else if member.can_borrow_more}}
+          <div class="alert alert-success mt-3 mb-0" role="alert">
+            <i class="bi bi-check-circle"></i>
+            <strong>Good Standing:</strong> Member can borrow {{subtract member.max_books member.borrowing_count}} more book{{#if (gt (subtract member.max_books member.borrowing_count) 1)}}s{{/if}}.
+          </div>
+          {{else if (eq member.borrowing_count member.max_books)}}
+          <div class="alert alert-info mt-3 mb-0" role="alert">
+            <i class="bi bi-info-circle"></i>
+            <strong>At Limit:</strong> Member has reached their borrowing limit.
+          </div>
+          {{/if}}
         </div>
       </div>
 
@@ -162,14 +247,20 @@
             <a href="/members/{{member.id}}/edit" class="btn btn-outline-primary">
               <i class="bi bi-pencil"></i> Edit Information
             </a>
-            <button type="button" class="btn btn-outline-info" disabled>
-              <i class="bi bi-book"></i> View Borrowed Books
+            {{#if member.borrowing_count}}
+            <button type="button" class="btn btn-outline-info" onclick="scrollToCurrentBorrowings()">
+              <i class="bi bi-book"></i> View Borrowed Books ({{member.borrowing_count}})
             </button>
+            {{else}}
+            <button type="button" class="btn btn-outline-info" disabled>
+              <i class="bi bi-book"></i> No Current Borrowings
+            </button>
+            {{/if}}
             <button type="button" class="btn btn-outline-warning" disabled>
               <i class="bi bi-clock-history"></i> Borrowing History
             </button>
             <hr>
-            <button type="button" class="btn btn-outline-danger" onclick="confirmDelete()">
+            <button type="button" class="btn btn-outline-danger" onclick="confirmDelete()" {{#if member.borrowing_count}}disabled title="Cannot delete member with active borrowings"{{/if}}>
               <i class="bi bi-trash"></i> Delete Member
             </button>
           </div>
@@ -211,6 +302,13 @@
 function confirmDelete() {
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
     modal.show();
+}
+
+function scrollToCurrentBorrowings() {
+    const borrowingsSection = document.querySelector('.card:has(.card-title:contains("Currently Borrowed Books"))');
+    if (borrowingsSection) {
+        borrowingsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 </script>
 

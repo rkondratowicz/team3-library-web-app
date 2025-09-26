@@ -213,3 +213,68 @@ export interface BusinessResult<T> {
   error?: string;
   statusCode?: number;
 }
+
+// ==========================================
+// Borrowing System Types
+// ==========================================
+
+// Core borrowing transaction interface
+export interface Borrowing {
+  id: string;
+  member_id: string;
+  book_copy_id: string;
+  borrowed_date: string; // ISO date string (YYYY-MM-DD)
+  due_date: string; // ISO date string (YYYY-MM-DD)
+  returned_date: string | null; // ISO date string or null
+  renewal_count: number;
+  status: BorrowingStatus;
+  notes: string | null;
+  created_at: string; // ISO datetime string
+  updated_at: string; // ISO datetime string
+}
+
+// Borrowing status enumeration
+export type BorrowingStatus = 'active' | 'returned' | 'overdue' | 'lost';
+
+// Extended borrowing with book and member details for display
+export interface BorrowingWithDetails extends Borrowing {
+  member_name: string;
+  member_email: string;
+  book_title: string;
+  book_author: string;
+  book_isbn: string | null;
+  copy_number: number;
+  days_borrowed: number;
+  overdue_days: number;
+  is_overdue: boolean;
+  can_renew: boolean;
+}
+
+// Member with current borrowings
+export interface MemberWithBorrowings extends Member {
+  current_borrowings: BorrowingWithDetails[];
+  borrowing_count: number;
+  overdue_count: number;
+  can_borrow_more: boolean;
+}
+
+// Fine management interface
+export interface Fine {
+  id: string;
+  borrowing_id: string;
+  member_id: string;
+  fine_type: FineType;
+  amount: number;
+  assessed_date: string; // ISO date string
+  paid_date: string | null; // ISO date string or null
+  status: FineStatus;
+  description: string | null;
+  created_at: string; // ISO datetime string
+  updated_at: string; // ISO datetime string
+}
+
+// Fine type enumeration
+export type FineType = 'overdue' | 'lost' | 'damage' | 'late_return';
+
+// Fine status enumeration
+export type FineStatus = 'unpaid' | 'paid' | 'waived' | 'disputed';

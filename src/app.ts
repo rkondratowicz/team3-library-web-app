@@ -34,13 +34,14 @@ const hbs = create({
   helpers: {
     eq: (a: unknown, b: unknown) => a === b,
     gt: (a: unknown, b: unknown) => Number(a) > Number(b),
+    subtract: (a: unknown, b: unknown) => Number(a) - Number(b),
     truncate: (str: string, length: number) => {
       if (!str || str.length <= length) return str;
       return `${str.substring(0, length)}...`;
     },
     formatDate: (date: string) => {
       if (!date) return '';
-      return new Date(date).toLocaleDateString();
+      return new Date(date).toLocaleDateString('en-GB');
     },
     statusClass: (status: string) => {
       switch (status) {

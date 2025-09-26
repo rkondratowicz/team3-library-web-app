@@ -328,7 +328,7 @@ export class WebController {
 
     try {
       const { id } = req.params;
-      const result = await this.memberService.getMemberById(id);
+      const result = await this.memberService.getMemberWithBorrowings(id);
 
       if (result.success && result.data) {
         res.render('member-details', {
@@ -336,7 +336,7 @@ export class WebController {
           member: result.data,
         });
       } else {
-        res.status(404).render('error', {
+        res.status(result.statusCode || 404).render('error', {
           title: 'Member Not Found',
           error: 'Member not found',
           details: result.error || 'The requested member does not exist',
