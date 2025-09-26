@@ -1,7 +1,13 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sqlite3 from 'sqlite3';
-import type { Book, BookCopy, BookDbRow } from '../shared/types.js';
+import type {
+  Book,
+  BookCopy,
+  BookDbRow,
+  Borrowing,
+  CreateBorrowingRequest,
+} from '../shared/types.js';
 
 export interface IBookRepository {
   getAllBooks(): Promise<Book[]>;
@@ -19,6 +25,11 @@ export interface IBookRepository {
   deleteBookCopy(copyId: string): Promise<boolean>;
   getAvailableBookCopies(bookId: string): Promise<BookCopy[]>;
   getNextCopyNumber(bookId: string): Promise<number>;
+
+  // Borrowing methods
+  createBorrowing(borrowingData: CreateBorrowingRequest): Promise<Borrowing>;
+  getBorrowingById(id: string): Promise<Borrowing | null>;
+  getMemberActiveBorrowings(memberId: string): Promise<Borrowing[]>;
 }
 
 export class BookRepository implements IBookRepository {
@@ -392,6 +403,93 @@ export class BookRepository implements IBookRepository {
         }
       });
     });
+  }
+
+  // Borrowing methods
+  async createBorrowing(borrowingData: CreateBorrowingRequest): Promise<Borrowing> {
+    const borrowingId = crypto.randomUUID();
+    const borrowedDate = borrowingData.borrowed_date || new Date().toISOString().split('T')[0];
+    const dueDate = borrowingData.due_date || this.calculateDueDate(borrowedDate);
+
+    return new Promise((resolve, reject) => {
+      const sql = `
+        INSERT INTO borrowings (id, member_id, book_copy_id, borrowed_date, due_date, notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+
+      this.db.run(
+        sql,
+        [
+          borrowingId,
+          borrowingData.member_id,
+          borrowingData.book_copy_id,
+          borrowedDate,
+          dueDate,
+          borrowingData.notes || null,
+        ],
+        (err) => {
+          if (err) {
+            console.error('Database error:', err.message);
+            reject(err);
+          } else {
+            // Return the created borrowing
+            const borrowing: Borrowing = {
+              id: borrowingId,
+              member_id: borrowingData.member_id,
+              book_copy_id: borrowingData.book_copy_id,
+              borrowed_date: borrowedDate,
+              due_date: dueDate,
+              renewal_count: 0,
+              status: 'active',
+              notes: borrowingData.notes || undefined,
+            };
+            resolve(borrowing);
+          }
+        },
+      );
+    });
+  }
+
+  async getBorrowingById(id: string): Promise<Borrowing | null> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT * FROM borrowings WHERE id = ?
+      `;
+
+      this.db.get(sql, [id], (err: Error | null, row: Borrowing | undefined) => {
+        if (err) {
+          console.error('Database error:', err.message);
+          reject(err);
+        } else {
+          resolve(row || null);
+        }
+      });
+    });
+  }
+
+  async getMemberActiveBorrowings(memberId: string): Promise<Borrowing[]> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT * FROM borrowings 
+        WHERE member_id = ? AND status = 'active'
+        ORDER BY borrowed_date DESC
+      `;
+
+      this.db.all(sql, [memberId], (err: Error | null, rows: Borrowing[]) => {
+        if (err) {
+          console.error('Database error:', err.message);
+          reject(err);
+        } else {
+          resolve(rows || []);
+        }
+      });
+    });
+  }
+
+  private calculateDueDate(borrowedDate: string): string {
+    const date = new Date(borrowedDate);
+    date.setDate(date.getDate() + 14); // 2 weeks checkout period
+    return date.toISOString().split('T')[0];
   }
 
   // Clean up database connection

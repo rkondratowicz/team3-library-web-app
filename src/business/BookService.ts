@@ -6,6 +6,7 @@ import type {
   BookCopy,
   BookSearchFilters,
   BookWithCopies,
+  Borrowing,
   BusinessResult,
   CreateBookCopyRequest,
   CreateBookRequest,
@@ -41,6 +42,9 @@ export interface IBookService {
   // Inventory and availability methods
   getBookInventory(): Promise<BusinessResult<BookAvailability[]>>;
   getBookAvailability(bookId: string): Promise<BusinessResult<BookAvailability>>;
+
+  // Borrowing methods
+  checkoutBook(memberId: string, bookId: string): Promise<BusinessResult<Borrowing>>;
 
   // Validation methods
   validateISBN(isbn: string): boolean;
@@ -759,6 +763,70 @@ export class BookService implements IBookService {
       return {
         success: false,
         error: 'Failed to fetch available copies',
+        statusCode: 500,
+      };
+    }
+  }
+
+  // Borrowing methods
+  async checkoutBook(memberId: string, bookId: string): Promise<BusinessResult<Borrowing>> {
+    try {
+      // Validate inputs
+      if (!this.isValidUUID(memberId)) {
+        return {
+          success: false,
+          error: 'Invalid member ID format',
+          statusCode: 400,
+        };
+      }
+
+      if (!this.isValidUUID(bookId)) {
+        return {
+          success: false,
+          error: 'Invalid book ID format',
+          statusCode: 400,
+        };
+      }
+
+      // Check if book exists
+      const bookExists = await this.bookRepository.bookExists(bookId);
+      if (!bookExists) {
+        return {
+          success: false,
+          error: 'Book not found',
+          statusCode: 404,
+        };
+      }
+
+      // Get available copies
+      const availableCopies = await this.bookRepository.getAvailableBookCopies(bookId);
+      if (availableCopies.length === 0) {
+        return {
+          success: false,
+          error: 'No available copies',
+          statusCode: 400,
+        };
+      }
+
+      // Get the first available copy
+      const availableCopy = availableCopies[0];
+
+      // Create borrowing record (this will trigger the database trigger to update copy status)
+      const borrowing = await this.bookRepository.createBorrowing({
+        member_id: memberId,
+        book_copy_id: availableCopy.id,
+      });
+
+      return {
+        success: true,
+        data: borrowing,
+        statusCode: 200,
+      };
+    } catch (error) {
+      console.error('Error in BookService.checkoutBook:', error);
+      return {
+        success: false,
+        error: 'Failed to checkout book',
         statusCode: 500,
       };
     }

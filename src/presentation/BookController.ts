@@ -662,41 +662,18 @@ export class BookController {
         return;
       }
 
-      // Get available copies for this book
-      const availableCopiesResult = await this.bookService.getAvailableCopies(bookId);
+      // Use the new checkoutBook method from BookService
+      const checkoutResult = await this.bookService.checkoutBook(memberId, bookId);
 
-      if (
-        !availableCopiesResult.success ||
-        !availableCopiesResult.data ||
-        availableCopiesResult.data.length === 0
-      ) {
-        res.status(400).json({
-          error: 'No available copies',
-          details: 'There are no available copies of this book for checkout',
-        });
-        return;
-      }
-
-      // Get the first available copy
-      const availableCopy = availableCopiesResult.data[0];
-
-      // Update the copy status to borrowed
-      const updateResult = await this.bookService.updateBookCopyStatus(
-        availableCopy.id,
-        'borrowed',
-      );
-
-      if (updateResult.success) {
-        // TODO: Create a borrowing record in the borrowings table
-        // For now, we'll just update the copy status
+      if (checkoutResult.success) {
         res.status(200).json({
           success: true,
           message: 'Book successfully checked out',
         });
       } else {
-        res.status(500).json({
-          error: 'Checkout failed',
-          details: updateResult.error || 'Failed to update book copy status',
+        res.status(checkoutResult.statusCode || 500).json({
+          error: checkoutResult.error || 'Checkout failed',
+          details: checkoutResult.error || 'An unexpected error occurred during checkout',
         });
       }
     } catch (error) {
