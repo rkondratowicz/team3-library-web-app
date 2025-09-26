@@ -1,10 +1,6 @@
 import type { Request, Response } from 'express';
 import type { ReportsService } from '../business/ReportsService.js';
-import type { 
-  PopularBooksResponse, 
-  ReportsFilters,
-  ErrorResponse 
-} from '../shared/types.js';
+import type { ErrorResponse, PopularBooksResponse, ReportsFilters } from '../shared/types.js';
 
 export class ReportsController {
   constructor(private reportsService: ReportsService) {}

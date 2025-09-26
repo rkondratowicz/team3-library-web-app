@@ -78,7 +78,9 @@ export function createMemberFormRoutes(memberController: MemberController): expr
   return router;
 }
 
-export function createReportsRoutes(reportsController: import('./ReportsController.js').ReportsController): express.Router {
+export function createReportsRoutes(
+  reportsController: import('./ReportsController.js').ReportsController,
+): express.Router {
   const router = express.Router();
 
   // GET /reports/popular-books - Get most popular books

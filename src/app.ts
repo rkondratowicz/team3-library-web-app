@@ -72,7 +72,8 @@ const hbs = create({
     // Reports helpers
     formatDateTime: (date: string) => {
       if (!date) return '';
-      return new Date(date).toLocaleDateString('en-GB') + ' ' + new Date(date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      const dateObj = new Date(date);
+      return `${dateObj.toLocaleDateString('en-GB')} ${dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
     },
     formatDecimal: (num: number, places: number) => {
       if (typeof num !== 'number') return '0';
@@ -80,7 +81,7 @@ const hbs = create({
     },
     capitalize: (str: string) => {
       if (!str) return '';
-      return str.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      return str.replace(/[-_]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
     },
     add: (a: unknown, b: unknown) => Number(a) + Number(b),
     multiply: (a: unknown, b: unknown) => Number(a) * Number(b),

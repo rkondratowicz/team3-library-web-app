@@ -1,12 +1,11 @@
-import sqlite3 from 'sqlite3';
-import path from 'node:path';
+import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
-import type { 
-  PopularBook, 
-  PopularBooksResponse, 
-  ReportsFilters, 
-  BusinessResult 
+import sqlite3 from 'sqlite3';
+import type {
+  BusinessResult,
+  PopularBook,
+  PopularBooksResponse,
+  ReportsFilters,
 } from '../shared/types.js';
 
 // Database query result interfaces
@@ -152,10 +151,12 @@ export class ReportsService {
   /**
    * Get popular books with additional statistics
    */
-  async getPopularBooksWithStats(filters: ReportsFilters): Promise<BusinessResult<PopularBooksWithStatsResponse>> {
+  async getPopularBooksWithStats(
+    filters: ReportsFilters,
+  ): Promise<BusinessResult<PopularBooksWithStatsResponse>> {
     return new Promise((resolve) => {
       try {
-          // First get the popular books
+        // First get the popular books
         this.getPopularBooks(filters).then((booksResult) => {
           if (!booksResult.success || !booksResult.data) {
             resolve({
@@ -164,7 +165,7 @@ export class ReportsService {
               statusCode: booksResult.statusCode || 500,
             });
             return;
-          }          // Get additional statistics
+          } // Get additional statistics
           const statsQuery = `
             SELECT 
               COUNT(DISTINCT books.id) as total_unique_books,
@@ -233,14 +234,18 @@ export class ReportsService {
    */
   private getDateThreshold(period: string): string {
     const now = new Date();
-    
+
     switch (period) {
       case 'last-week':
         return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       case 'last-month':
-        return new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString().split('T')[0];
+        return new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+          .toISOString()
+          .split('T')[0];
       case 'last-year':
-        return new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toISOString().split('T')[0];
+        return new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
+          .toISOString()
+          .split('T')[0];
       default:
         return '1900-01-01'; // Very old date for all-time
     }
