@@ -664,8 +664,12 @@ export class BookController {
 
       // Get available copies for this book
       const availableCopiesResult = await this.bookService.getAvailableCopies(bookId);
-      
-      if (!availableCopiesResult.success || !availableCopiesResult.data || availableCopiesResult.data.length === 0) {
+
+      if (
+        !availableCopiesResult.success ||
+        !availableCopiesResult.data ||
+        availableCopiesResult.data.length === 0
+      ) {
         res.status(400).json({
           error: 'No available copies',
           details: 'There are no available copies of this book for checkout',
@@ -679,7 +683,7 @@ export class BookController {
       // Update the copy status to borrowed
       const updateResult = await this.bookService.updateBookCopyStatus(
         availableCopy.id,
-        'borrowed'
+        'borrowed',
       );
 
       if (updateResult.success) {

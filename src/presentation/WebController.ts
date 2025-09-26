@@ -417,9 +417,10 @@ export class WebController {
       const availableCopiesResult = await this.bookService.getAvailableCopies(book.id);
 
       const totalCopies = copiesResult.success && copiesResult.data ? copiesResult.data.length : 0;
-      const availableCopies = availableCopiesResult.success && availableCopiesResult.data
-        ? availableCopiesResult.data.length
-        : 0;
+      const availableCopies =
+        availableCopiesResult.success && availableCopiesResult.data
+          ? availableCopiesResult.data.length
+          : 0;
 
       // Check if book is available for checkout
       if (availableCopies === 0) {
@@ -439,7 +440,7 @@ export class WebController {
       };
 
       // Get members (active only for checkout)
-      let memberResult;
+      let memberResult: { success: boolean; data?: Member[]; error?: string };
       if (searchTerm && typeof searchTerm === 'string') {
         memberResult = await this.memberService.searchMembers(searchTerm);
       } else {
@@ -448,11 +449,14 @@ export class WebController {
 
       if (memberResult.success && memberResult.data) {
         // Filter to show only active members for checkout
-        const activeMembers = memberResult.data.filter(member => member.status === 'active');
-        
-        // Log for debugging
-        console.log(`Checkout - Book: ${book.title} (${availableCopies} available), Members: ${activeMembers.length} active`);
-        
+        const activeMembers = memberResult.data.filter((member) => member.status === 'active');
+
+        // Add debugging info
+        console.log(`Checkout page: Book ${book.id} has ${availableCopies} available copies`);
+        console.log(
+          `Found ${memberResult.data.length} total members, ${activeMembers.length} active members`,
+        );
+
         res.render('member-selection', {
           title: `Checkout - ${book.title}`,
           book: bookWithCopyInfo,
