@@ -158,6 +158,7 @@
                         <span class="badge {{statusClass status}} fs-6 {{#if borrower}}copy-clickable{{/if}}" 
                               {{#if borrower}}data-bs-toggle="modal" data-bs-target="#borrowerModal" 
                               data-copy-number="{{copy_number}}" 
+                              data-borrower-id="{{borrower.id}}"
                               data-borrower-name="{{borrower.name}}" 
                               data-borrower-email="{{borrower.email}}" 
                               data-borrowed-date="{{borrower.borrowed_date}}" 
@@ -327,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Extract data attributes
             const copyNumber = button.getAttribute('data-copy-number');
+            const borrowerId = button.getAttribute('data-borrower-id');
             const borrowerName = button.getAttribute('data-borrower-name');
             const borrowerEmail = button.getAttribute('data-borrower-email');
             const borrowedDate = button.getAttribute('data-borrowed-date');
@@ -351,9 +353,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('modal-borrowed-date').textContent = formatDate(borrowedDate);
             document.getElementById('modal-due-date').textContent = formatDate(dueDate);
             
-            // Set member profile link (assuming members have URL structure /members/search?email=...)
+            // Set member profile link using the member ID
             const memberLink = document.getElementById('modal-member-link');
-            memberLink.href = `/members/search?email=${encodeURIComponent(borrowerEmail)}`;
+            memberLink.href = `/members/${borrowerId}`;
         });
     }
 });
