@@ -75,5 +75,8 @@ export function createMemberFormRoutes(memberController: MemberController): expr
   // DELETE /form/members/:id - Delete member from form
   router.delete('/:id', memberController.deleteMemberFromForm);
 
+  // POST /form/members/:id/return/:borrowingId - Return a book from form
+  router.post('/:id/return/:borrowingId', memberController.returnBookFromForm);
+
   return router;
 }

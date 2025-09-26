@@ -163,4 +163,29 @@ export class MemberController {
       res.status(500).json({ error: 'Internal server error' });
     }
   };
+
+  // POST /api/form/members/:id/return/:borrowingId - Return a book (for web forms)
+  returnBookFromForm = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id: memberId, borrowingId } = req.params;
+      const result = await this.memberService.returnBook(borrowingId);
+
+      if (result.success) {
+        res.redirect(`/members/${memberId}`);
+      } else {
+        res.status(400).render('error', {
+          title: 'Error',
+          error: 'Failed to return book',
+          details: result.error || 'Unknown error',
+        });
+      }
+    } catch (error) {
+      console.error('Error returning book:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to return book',
+        details: 'Internal server error',
+      });
+    }
+  };
 }

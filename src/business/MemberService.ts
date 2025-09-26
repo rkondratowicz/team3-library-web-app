@@ -4,6 +4,18 @@ import sqlite3 from 'sqlite3';
 import { v4 as uuidv4 } from 'uuid';
 import type { Member } from '../shared/types.js';
 
+export interface MemberBorrowedBook {
+  borrowingId: string;
+  bookCopyId: string;
+  bookId: string;
+  title: string;
+  author: string;
+  copyNumber: number;
+  borrowedDate: string;
+  dueDate: string;
+  status: 'active' | 'returned' | 'overdue' | 'lost';
+}
+
 export interface IMemberService {
   getAllMembers(): Promise<{ success: boolean; data?: Member[]; error?: string }>;
   searchMembers(searchTerm: string): Promise<{ success: boolean; data?: Member[]; error?: string }>;
@@ -19,6 +31,10 @@ export interface IMemberService {
     memberData: { memberName?: string; email?: string; phone?: string; memAddress?: string },
   ): Promise<{ success: boolean; data?: Member; error?: string }>;
   deleteMember(id: string): Promise<{ success: boolean; error?: string }>;
+  getMemberBorrowedBooks(
+    memberId: string,
+  ): Promise<{ success: boolean; data?: MemberBorrowedBook[]; error?: string }>;
+  returnBook(borrowingId: string): Promise<{ success: boolean; error?: string }>;
 }
 
 export class MemberService implements IMemberService {
@@ -299,6 +315,111 @@ export class MemberService implements IMemberService {
         } else {
           resolve({ success: true });
         }
+      });
+    });
+  }
+
+  /**
+   * Get all books currently borrowed by a member
+   */
+  async getMemberBorrowedBooks(
+    memberId: string,
+  ): Promise<{ success: boolean; data?: MemberBorrowedBook[]; error?: string }> {
+    if (!memberId) {
+      return { success: false, error: 'Member ID is required' };
+    }
+
+    return new Promise((resolve) => {
+      const query = `
+        SELECT 
+          b.id as borrowingId,
+          b.book_copy_id as bookCopyId,
+          bc.book_id as bookId,
+          books.title,
+          books.author,
+          bc.copy_number as copyNumber,
+          b.borrowed_date as borrowedDate,
+          b.due_date as dueDate,
+          b.status
+        FROM borrowings b
+        JOIN book_copies bc ON b.book_copy_id = bc.id
+        JOIN books ON bc.book_id = books.id
+        WHERE b.member_id = ? AND b.status = 'active'
+        ORDER BY b.borrowed_date DESC
+      `;
+
+      this.db.all(query, [memberId], (err, rows: MemberBorrowedBook[]) => {
+        if (err) {
+          console.error('Error getting member borrowed books:', err);
+          resolve({ success: false, error: 'Failed to fetch borrowed books' });
+        } else {
+          resolve({ success: true, data: rows });
+        }
+      });
+    });
+  }
+
+  /**
+   * Return a borrowed book
+   */
+  async returnBook(borrowingId: string): Promise<{ success: boolean; error?: string }> {
+    if (!borrowingId) {
+      return { success: false, error: 'Borrowing ID is required' };
+    }
+
+    return new Promise((resolve) => {
+      const db = this.db;
+
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+
+        // Update borrowing record
+        const updateBorrowingQuery = `
+          UPDATE borrowings 
+          SET status = 'returned', 
+              returned_date = DATE('now'),
+              updated_at = CURRENT_TIMESTAMP
+          WHERE id = ? AND status = 'active'
+        `;
+
+        db.run(updateBorrowingQuery, [borrowingId], function (err) {
+          if (err) {
+            console.error('Error updating borrowing record:', err);
+            db.run('ROLLBACK');
+            resolve({ success: false, error: 'Failed to update borrowing record' });
+            return;
+          }
+
+          if (this.changes === 0) {
+            db.run('ROLLBACK');
+            resolve({ success: false, error: 'Borrowing not found or already returned' });
+            return;
+          }
+
+          // Update book copy status to available
+          const updateCopyQuery = `
+            UPDATE book_copies 
+            SET status = 'available', 
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = (
+              SELECT book_copy_id 
+              FROM borrowings 
+              WHERE id = ?
+            )
+          `;
+
+          db.run(updateCopyQuery, [borrowingId], (err: Error | null) => {
+            if (err) {
+              console.error('Error updating book copy status:', err);
+              db.run('ROLLBACK');
+              resolve({ success: false, error: 'Failed to update book copy status' });
+              return;
+            }
+
+            db.run('COMMIT');
+            resolve({ success: true });
+          });
+        });
       });
     });
   }

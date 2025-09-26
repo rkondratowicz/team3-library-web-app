@@ -328,18 +328,25 @@ export class WebController {
 
     try {
       const { id } = req.params;
-      const result = await this.memberService.getMemberById(id);
+      const [memberResult, borrowedBooksResult] = await Promise.all([
+        this.memberService.getMemberById(id),
+        this.memberService.getMemberBorrowedBooks(id),
+      ]);
 
-      if (result.success && result.data) {
+      if (memberResult.success && memberResult.data) {
+        const borrowedBooks = borrowedBooksResult.success ? borrowedBooksResult.data || [] : [];
+
         res.render('member-details', {
-          title: `Member - ${result.data.memberName}`,
-          member: result.data,
+          title: `Member - ${memberResult.data.memberName}`,
+          member: memberResult.data,
+          borrowedBooks: borrowedBooks,
+          currentlyBorrowedCount: borrowedBooks.length,
         });
       } else {
         res.status(404).render('error', {
           title: 'Member Not Found',
           error: 'Member not found',
-          details: result.error || 'The requested member does not exist',
+          details: memberResult.error || 'The requested member does not exist',
         });
       }
     } catch (error) {

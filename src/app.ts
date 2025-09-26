@@ -42,6 +42,10 @@ const hbs = create({
       if (!date) return '';
       return new Date(date).toLocaleDateString();
     },
+    isOverdue: (dueDate: string) => {
+      if (!dueDate) return false;
+      return new Date() > new Date(dueDate);
+    },
     statusClass: (status: string) => {
       switch (status) {
         case 'available':
