@@ -397,7 +397,7 @@ body {
 
 /* Push buttons to bottom of cards */
 .member-card .d-grid.mt-auto {
-  margin-top: auto !important;
+  margin-top: auto;
 }
 
 .checkout-member-btn {
@@ -434,4 +434,15 @@ footer {
 .footer-text {
   color: var(--secondary-color);
   font-size: 0.9rem;
+}
+
+/* Copy availability clickable badges */
+.copy-clickable {
+  transition: all 0.2s ease;
+}
+
+.copy-clickable:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+  filter: brightness(1.1);
 }

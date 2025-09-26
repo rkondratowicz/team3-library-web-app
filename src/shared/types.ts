@@ -22,6 +22,16 @@ export interface BookCopy {
   updated_at: string;
 }
 
+export interface BookCopyWithBorrower extends BookCopy {
+  borrower?: {
+    id: string;
+    name: string;
+    email: string;
+    borrowed_date: string;
+    due_date: string;
+  };
+}
+
 export interface CreateBookCopyRequest {
   book_id: string;
   condition?: 'excellent' | 'good' | 'fair' | 'poor';
