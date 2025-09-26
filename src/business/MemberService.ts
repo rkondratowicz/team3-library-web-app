@@ -245,17 +245,17 @@ export class MemberService implements IMemberService {
           book_copy_id: string;
           borrowed_date: string;
           due_date: string;
-          returned_date: string | null;
+          returned_date: string | null; // SQL result can be null
           renewal_count: number;
           status: string;
-          notes: string | null;
+          notes: string | null; // SQL result can be null
           created_at: string;
           updated_at: string;
           member_name: string;
           member_email: string;
           book_title: string;
           book_author: string;
-          book_isbn: string | null;
+          book_isbn: string | null; // SQL result can be null
           copy_number: number;
           days_borrowed: number;
           overdue_days: number;
@@ -281,17 +281,17 @@ export class MemberService implements IMemberService {
             book_copy_id: row.book_copy_id,
             borrowed_date: row.borrowed_date,
             due_date: row.due_date,
-            returned_date: row.returned_date,
+            returned_date: row.returned_date || undefined, // Convert null to undefined
             renewal_count: row.renewal_count,
             status: row.status as import('../shared/types.js').BorrowingStatus,
-            notes: row.notes,
+            notes: row.notes || undefined, // Convert null to undefined
             created_at: row.created_at,
             updated_at: row.updated_at,
             member_name: row.member_name,
             member_email: row.member_email,
             book_title: row.book_title,
             book_author: row.book_author,
-            book_isbn: row.book_isbn,
+            book_isbn: row.book_isbn || undefined, // Convert null to undefined
             copy_number: row.copy_number,
             days_borrowed: Math.round(row.days_borrowed * 10) / 10, // Round to 1 decimal
             overdue_days: Math.max(0, Math.floor(row.overdue_days)), // Round down to full days
@@ -352,8 +352,8 @@ export class MemberService implements IMemberService {
         id,
         memberData.memberName.trim(),
         memberData.email.trim(),
-        memberData.phone || null,
-        memberData.memAddress || null,
+        memberData.phone || undefined,
+        memberData.memAddress || undefined,
       ];
 
       this.db.run(query, params, (err) => {
@@ -393,7 +393,7 @@ export class MemberService implements IMemberService {
     }
 
     const updateFields: string[] = [];
-    const params: (string | null | number)[] = [];
+    const params: (string | undefined | number)[] = [];
 
     if (memberData.memberName !== undefined) {
       if (!memberData.memberName.trim()) {

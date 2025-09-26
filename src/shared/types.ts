@@ -225,10 +225,10 @@ export interface Borrowing {
   book_copy_id: string;
   borrowed_date: string; // ISO date string (YYYY-MM-DD)
   due_date: string; // ISO date string (YYYY-MM-DD)
-  returned_date: string | null; // ISO date string or null
+  returned_date?: string; // Optional ISO date string
   renewal_count: number;
   status: BorrowingStatus;
-  notes: string | null;
+  notes?: string; // Optional notes
   created_at: string; // ISO datetime string
   updated_at: string; // ISO datetime string
 }
@@ -242,7 +242,7 @@ export interface BorrowingWithDetails extends Borrowing {
   member_email: string;
   book_title: string;
   book_author: string;
-  book_isbn: string | null;
+  book_isbn?: string; // Optional ISBN
   copy_number: number;
   days_borrowed: number;
   overdue_days: number;
@@ -266,9 +266,9 @@ export interface Fine {
   fine_type: FineType;
   amount: number;
   assessed_date: string; // ISO date string
-  paid_date: string | null; // ISO date string or null
+  paid_date?: string; // Optional ISO date string
   status: FineStatus;
-  description: string | null;
+  description?: string; // Optional description
   created_at: string; // ISO datetime string
   updated_at: string; // ISO datetime string
 }
