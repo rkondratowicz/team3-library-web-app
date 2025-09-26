@@ -734,7 +734,9 @@ export class BookService implements IBookService {
     }
   }
 
-  async getBookCopiesWithBorrowers(bookId: string): Promise<BusinessResult<BookCopyWithBorrower[]>> {
+  async getBookCopiesWithBorrowers(
+    bookId: string,
+  ): Promise<BusinessResult<BookCopyWithBorrower[]>> {
     try {
       if (!this.isValidUUID(bookId)) {
         return {

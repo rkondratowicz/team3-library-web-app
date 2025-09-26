@@ -10,6 +10,22 @@ import type {
   CreateBorrowingRequest,
 } from '../shared/types.js';
 
+interface BookCopyWithBorrowerRow {
+  id: string;
+  book_id: string;
+  copy_number: number;
+  status: 'available' | 'borrowed' | 'maintenance';
+  condition: 'excellent' | 'good' | 'fair' | 'poor';
+  created_at: string;
+  updated_at: string;
+  borrowing_id?: string;
+  member_id?: string;
+  borrowed_date?: string;
+  due_date?: string;
+  memberName?: string;
+  email?: string;
+}
+
 export interface IBookRepository {
   getAllBooks(): Promise<Book[]>;
   getBookById(id: string): Promise<Book | null>;
@@ -280,7 +296,7 @@ export class BookRepository implements IBookRepository {
         ORDER BY bc.copy_number ASC
       `;
 
-      this.db.all(sql, [bookId], (err: Error | null, rows: any[]) => {
+      this.db.all(sql, [bookId], (err: Error | null, rows: BookCopyWithBorrowerRow[]) => {
         if (err) {
           console.error('Database error:', err.message);
           reject(err);
@@ -297,7 +313,14 @@ export class BookRepository implements IBookRepository {
             };
 
             // Add borrower information if the copy is borrowed
-            if (row.borrowing_id && row.member_id) {
+            if (
+              row.borrowing_id &&
+              row.member_id &&
+              row.memberName &&
+              row.email &&
+              row.borrowed_date &&
+              row.due_date
+            ) {
               copy.borrower = {
                 id: row.member_id,
                 name: row.memberName,

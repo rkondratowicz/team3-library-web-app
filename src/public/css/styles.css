@@ -397,7 +397,7 @@ body {
 
 /* Push buttons to bottom of cards */
 .member-card .d-grid.mt-auto {
-  margin-top: auto !important;
+  margin-top: auto;
 }
 
 .checkout-member-btn {
