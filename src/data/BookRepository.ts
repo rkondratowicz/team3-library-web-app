@@ -48,6 +48,7 @@ export interface IBookRepository {
   createBorrowing(borrowingData: CreateBorrowingRequest): Promise<Borrowing>;
   getBorrowingById(id: string): Promise<Borrowing | null>;
   getMemberActiveBorrowings(memberId: string): Promise<Borrowing[]>;
+  returnBook(borrowingId: string): Promise<Borrowing>;
 }
 
 export class BookRepository implements IBookRepository {
@@ -572,6 +573,65 @@ export class BookRepository implements IBookRepository {
         } else {
           resolve(rows || []);
         }
+      });
+    });
+  }
+
+  async returnBook(borrowingId: string): Promise<Borrowing> {
+    const returnedDate = new Date().toISOString().split('T')[0];
+
+    return new Promise((resolve, reject) => {
+      // Start transaction to update borrowing and book copy status
+      this.db.serialize(() => {
+        this.db.run('BEGIN TRANSACTION');
+
+        // Update borrowing record
+        const updateBorrowingSql = `
+          UPDATE borrowings 
+          SET returned_date = ?, status = 'returned', updated_at = datetime('now')
+          WHERE id = ? AND status = 'active'
+        `;
+
+        this.db.run(updateBorrowingSql, [returnedDate, borrowingId], (err) => {
+          if (err) {
+            this.db.run('ROLLBACK');
+            console.error('Database error updating borrowing:', err.message);
+            reject(err);
+            return;
+          }
+
+          // Update book copy status to available
+          const updateCopySql = `
+            UPDATE book_copies 
+            SET status = 'available', updated_at = datetime('now')
+            WHERE id = (
+              SELECT book_copy_id FROM borrowings WHERE id = ?
+            )
+          `;
+
+          this.db.run(updateCopySql, [borrowingId], (err) => {
+            if (err) {
+              this.db.run('ROLLBACK');
+              console.error('Database error updating copy status:', err.message);
+              reject(err);
+              return;
+            }
+
+            // Get the updated borrowing record
+            const getBorrowingSql = 'SELECT * FROM borrowings WHERE id = ?';
+            this.db.get(getBorrowingSql, [borrowingId], (err: Error | null, row: Borrowing) => {
+              if (err) {
+                this.db.run('ROLLBACK');
+                console.error('Database error retrieving borrowing:', err.message);
+                reject(err);
+                return;
+              }
+
+              this.db.run('COMMIT');
+              resolve(row);
+            });
+          });
+        });
       });
     });
   }

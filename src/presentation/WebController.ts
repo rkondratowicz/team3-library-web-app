@@ -329,13 +329,31 @@ export class WebController {
 
     try {
       const { id } = req.params;
+      const { returned, error } = req.query;
       const result = await this.memberService.getMemberWithBorrowings(id);
 
       if (result.success && result.data) {
-        res.render('member-details', {
+        const renderData: {
+          title: string;
+          member: typeof result.data;
+          successMessage?: string;
+          errorMessage?: string;
+        } = {
           title: `Member - ${result.data.memberName}`,
           member: result.data,
-        });
+        };
+
+        // Add success message if book was returned
+        if (returned === 'success') {
+          renderData.successMessage = 'Book returned successfully!';
+        }
+
+        // Add error message if there was an error
+        if (error) {
+          renderData.errorMessage = typeof error === 'string' ? error : 'An error occurred';
+        }
+
+        res.render('member-details', renderData);
       } else {
         res.status(result.statusCode || 404).render('error', {
           title: 'Member Not Found',
@@ -538,6 +556,36 @@ export class WebController {
         error: 'Failed to load reports page',
         details: 'Internal server error',
       });
+    }
+  };
+
+  // POST /return/:borrowingId - Return a book
+  returnBook = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { borrowingId } = req.params;
+      const result = await this.bookService.returnBook(borrowingId);
+
+      if (result.success) {
+        // Get member ID from the borrowing record to redirect back to member details
+        const borrowing = result.data;
+        if (borrowing) {
+          res.redirect(`/members/${borrowing.member_id}?returned=success`);
+        } else {
+          res.redirect('/members?returned=success');
+        }
+      } else {
+        // Redirect with error message
+        const memberId = req.body.memberId || req.query.memberId;
+        const redirectUrl = memberId ? `/members/${memberId}` : '/members';
+        res.redirect(
+          `${redirectUrl}?error=${encodeURIComponent(result.error || 'Failed to return book')}`,
+        );
+      }
+    } catch (error) {
+      console.error('Error in WebController.returnBook:', error);
+      const memberId = req.body.memberId || req.query.memberId;
+      const redirectUrl = memberId ? `/members/${memberId}` : '/members';
+      res.redirect(`${redirectUrl}?error=${encodeURIComponent('Internal server error')}`);
     }
   };
 }

@@ -47,6 +47,7 @@ export interface IBookService {
 
   // Borrowing methods
   checkoutBook(memberId: string, bookId: string): Promise<BusinessResult<Borrowing>>;
+  returnBook(borrowingId: string): Promise<BusinessResult<Borrowing>>;
 
   // Validation methods
   validateISBN(isbn: string): boolean;
@@ -870,6 +871,53 @@ export class BookService implements IBookService {
       return {
         success: false,
         error: 'Failed to checkout book',
+        statusCode: 500,
+      };
+    }
+  }
+
+  async returnBook(borrowingId: string): Promise<BusinessResult<Borrowing>> {
+    try {
+      // Validate borrowing ID format
+      if (!this.isValidUUID(borrowingId)) {
+        return {
+          success: false,
+          error: 'Invalid borrowing ID format',
+          statusCode: 400,
+        };
+      }
+
+      // Check if borrowing exists and is active
+      const existingBorrowing = await this.bookRepository.getBorrowingById(borrowingId);
+      if (!existingBorrowing) {
+        return {
+          success: false,
+          error: 'Borrowing record not found',
+          statusCode: 404,
+        };
+      }
+
+      if (existingBorrowing.status !== 'active') {
+        return {
+          success: false,
+          error: 'Book has already been returned',
+          statusCode: 400,
+        };
+      }
+
+      // Return the book
+      const returnedBorrowing = await this.bookRepository.returnBook(borrowingId);
+
+      return {
+        success: true,
+        data: returnedBorrowing,
+        statusCode: 200,
+      };
+    } catch (error) {
+      console.error('Error in BookService.returnBook:', error);
+      return {
+        success: false,
+        error: 'Failed to return book',
         statusCode: 500,
       };
     }

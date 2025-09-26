@@ -151,6 +151,9 @@ app.get('/members/add', webController.addMemberForm);
 app.get('/members/:id', webController.memberDetails);
 app.get('/members/:id/edit', webController.editMemberForm);
 
+// Book return route
+app.post('/return/:borrowingId', webController.returnBook);
+
 // Reports Web Routes
 app.get('/reports', webController.reports);
 
