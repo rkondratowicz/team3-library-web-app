@@ -1,7 +1,13 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sqlite3 from 'sqlite3';
-import type { Book, BookCopy, BookDbRow, Borrowing, CreateBorrowingRequest } from '../shared/types.js';
+import type {
+  Book,
+  BookCopy,
+  BookDbRow,
+  Borrowing,
+  CreateBorrowingRequest,
+} from '../shared/types.js';
 
 export interface IBookRepository {
   getAllBooks(): Promise<Book[]>;
@@ -19,7 +25,7 @@ export interface IBookRepository {
   deleteBookCopy(copyId: string): Promise<boolean>;
   getAvailableBookCopies(bookId: string): Promise<BookCopy[]>;
   getNextCopyNumber(bookId: string): Promise<number>;
-  
+
   // Borrowing methods
   createBorrowing(borrowingData: CreateBorrowingRequest): Promise<Borrowing>;
   getBorrowingById(id: string): Promise<Borrowing | null>;
@@ -404,17 +410,24 @@ export class BookRepository implements IBookRepository {
     const borrowingId = crypto.randomUUID();
     const borrowedDate = borrowingData.borrowed_date || new Date().toISOString().split('T')[0];
     const dueDate = borrowingData.due_date || this.calculateDueDate(borrowedDate);
-    
+
     return new Promise((resolve, reject) => {
       const sql = `
         INSERT INTO borrowings (id, member_id, book_copy_id, borrowed_date, due_date, notes)
         VALUES (?, ?, ?, ?, ?, ?)
       `;
-      
+
       this.db.run(
         sql,
-        [borrowingId, borrowingData.member_id, borrowingData.book_copy_id, borrowedDate, dueDate, borrowingData.notes || null],
-        function(err) {
+        [
+          borrowingId,
+          borrowingData.member_id,
+          borrowingData.book_copy_id,
+          borrowedDate,
+          dueDate,
+          borrowingData.notes || null,
+        ],
+        (err) => {
           if (err) {
             console.error('Database error:', err.message);
             reject(err);
@@ -432,7 +445,7 @@ export class BookRepository implements IBookRepository {
             };
             resolve(borrowing);
           }
-        }
+        },
       );
     });
   }
@@ -442,7 +455,7 @@ export class BookRepository implements IBookRepository {
       const sql = `
         SELECT * FROM borrowings WHERE id = ?
       `;
-      
+
       this.db.get(sql, [id], (err: Error | null, row: Borrowing | undefined) => {
         if (err) {
           console.error('Database error:', err.message);
@@ -461,7 +474,7 @@ export class BookRepository implements IBookRepository {
         WHERE member_id = ? AND status = 'active'
         ORDER BY borrowed_date DESC
       `;
-      
+
       this.db.all(sql, [memberId], (err: Error | null, rows: Borrowing[]) => {
         if (err) {
           console.error('Database error:', err.message);

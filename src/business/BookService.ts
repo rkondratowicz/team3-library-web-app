@@ -45,7 +45,7 @@ export interface IBookService {
 
   // Borrowing methods
   checkoutBook(memberId: string, bookId: string): Promise<BusinessResult<Borrowing>>;
-  
+
   // Validation methods
   validateISBN(isbn: string): boolean;
   validateBookData(bookData: CreateBookRequest | UpdateBookRequest): BusinessResult<void>;
