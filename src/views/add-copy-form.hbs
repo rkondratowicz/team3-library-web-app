@@ -1,0 +1,209 @@
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-plus"></i> Add New Copy
+            </h1>
+            <a href="/books/{{book.id}}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Book Details
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Book Information Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-book"></i> Book Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 class="text-primary">{{book.title}}</h4>
+                        <p class="text-muted mb-1">by {{book.author}}</p>
+                        <p class="mb-0"><small class="text-muted">ISBN: {{book.isbn}}</small></p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="statistic">
+                                    <h5 class="text-primary">{{book.totalCopies}}</h5>
+                                    <small class="text-muted">Current Copies</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="statistic">
+                                    <h5 class="text-success">{{book.availableCopies}}</h5>
+                                    <small class="text-muted">Available</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="statistic">
+                                    <h5 class="text-warning">{{book.checkedOutCopies}}</h5>
+                                    <small class="text-muted">Checked Out</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Copy Form -->
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle"></i> New Copy Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/books/{{book.id}}/add-copy" method="POST" id="addCopyForm">
+                    <!-- Copy ID Section -->
+                    <div class="mb-4">
+                        <label for="copyId" class="form-label">
+                            <strong>Copy ID</strong>
+                            <small class="text-muted">(Unique identifier for this copy)</small>
+                        </label>
+                        
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="copyId" name="copyId" 
+                                   placeholder="Enter copy ID manually or generate one" required>
+                            <button type="button" class="btn btn-outline-primary" id="generateIdBtn">
+                                <i class="fas fa-dice"></i> Generate ID
+                            </button>
+                        </div>
+                        
+                        <div class="form-text">
+                            Copy ID should be unique. Format suggestion: copy-{{book.id}}-XXX
+                        </div>
+                    </div>
+
+                    <!-- Quantity Selection -->
+                    <div class="mb-4">
+                        <label for="quantity" class="form-label">
+                            <strong>Number of Copies</strong>
+                        </label>
+                        <select class="form-select" id="quantity" name="quantity" required>
+                            <option value="1" selected>1 copy</option>
+                            <option value="2">2 copies</option>
+                            <option value="3">3 copies</option>
+                            <option value="4">4 copies</option>
+                            <option value="5">5 copies</option>
+                            <option value="10">10 copies</option>
+                        </select>
+                        <div class="form-text">
+                            Select how many copies to add. Copy IDs will be auto-generated for multiple copies.
+                        </div>
+                    </div>
+
+                    <!-- Condition Selection -->
+                    <div class="mb-4">
+                        <label for="condition" class="form-label">
+                            <strong>Condition</strong>
+                        </label>
+                        <select class="form-select" id="condition" name="condition" required>
+                            <option value="excellent" selected>Excellent - Like new, no wear</option>
+                            <option value="good">Good - Minor wear, fully functional</option>
+                            <option value="fair">Fair - Noticeable wear but usable</option>
+                            <option value="poor">Poor - Significant wear, may need attention</option>
+                        </select>
+                        <div class="form-text">
+                            New copies typically start in "Excellent" condition.
+                        </div>
+                    </div>
+
+                    <!-- Status Information -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <strong>Initial Status</strong>
+                        </label>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            This copy will be created with <strong>"Available"</strong> status and can be immediately checked out to members.
+                        </div>
+                    </div>
+
+                    <!-- Copy Number Information -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <strong>Copy Number</strong>
+                        </label>
+                        <div class="alert alert-success">
+                            <i class="fas fa-hashtag"></i>
+                            This will be copy number <strong>{{nextCopyNumber}}</strong> for this book.
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <a href="/books/{{book.id}}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Add Copy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for ID generation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateIdBtn = document.getElementById('generateIdBtn');
+    const copyIdInput = document.getElementById('copyId');
+    const quantitySelect = document.getElementById('quantity');
+    const bookId = '{{book.id}}';
+    const nextCopyNumber = {{nextCopyNumber}};
+
+    // Update copy ID field behavior based on quantity
+    quantitySelect.addEventListener('change', function() {
+        const quantity = parseInt(this.value);
+        if (quantity > 1) {
+            copyIdInput.placeholder = 'IDs will be auto-generated for multiple copies';
+            copyIdInput.disabled = true;
+            copyIdInput.value = '';
+            generateIdBtn.disabled = true;
+            generateIdBtn.innerHTML = '<i class="fas fa-dice"></i> Auto-Generated';
+        } else {
+            copyIdInput.placeholder = 'Enter copy ID manually or generate one';
+            copyIdInput.disabled = false;
+            generateIdBtn.disabled = false;
+            generateIdBtn.innerHTML = '<i class="fas fa-dice"></i> Generate ID';
+        }
+    });
+
+    generateIdBtn.addEventListener('click', function() {
+        const quantity = parseInt(quantitySelect.value);
+        if (quantity === 1) {
+            // Generate a random copy ID in the format: copy-{bookId}-{copyNumber}-{random}
+            const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const generatedId = `copy-${bookId.substring(0, 8)}-${String(nextCopyNumber).padStart(3, '0')}-${randomSuffix}`;
+            copyIdInput.value = generatedId;
+        }
+    });
+
+    // Form validation
+    document.getElementById('addCopyForm').addEventListener('submit', function(e) {
+        const quantity = parseInt(quantitySelect.value);
+        const copyId = copyIdInput.value.trim();
+        
+        if (quantity === 1 && !copyId) {
+            e.preventDefault();
+            alert('Please enter or generate a Copy ID');
+            copyIdInput.focus();
+            return false;
+        }
+    });
+});
+</script>
