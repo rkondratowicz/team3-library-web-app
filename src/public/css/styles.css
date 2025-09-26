@@ -389,6 +389,17 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
+/* Ensure card body uses flexbox for button alignment */
+.member-card .card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Push buttons to bottom of cards */
+.member-card .d-grid.mt-auto {
+  margin-top: auto !important;
+}
+
 .checkout-member-btn {
   transition: all 0.2s ease;
 }
