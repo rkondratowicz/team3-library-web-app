@@ -113,6 +113,7 @@ export class BookService implements IBookService {
       }
 
       // Create book with UUID and all fields
+      const currentTimestamp = new Date().toISOString();
       const newBook: Book = {
         id: uuidv4(),
         author: bookData.author.trim(),
@@ -121,6 +122,8 @@ export class BookService implements IBookService {
         genre: bookData.genre,
         publication_year: bookData.publication_year,
         description: bookData.description,
+        created_at: currentTimestamp,
+        updated_at: currentTimestamp,
       };
 
       await this.bookRepository.createBook(newBook);

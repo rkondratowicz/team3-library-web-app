@@ -100,8 +100,8 @@ export class BookRepository implements IBookRepository {
   async createBook(book: Book): Promise<void> {
     return new Promise((resolve, reject) => {
       const sql = `
-        INSERT INTO books (id, author, title, isbn, genre, publication_year, description) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO books (id, author, title, isbn, genre, publication_year, description, created_at, updated_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       this.db.run(
@@ -114,6 +114,8 @@ export class BookRepository implements IBookRepository {
           book.genre,
           book.publication_year,
           book.description,
+          book.created_at,
+          book.updated_at,
         ],
         (err: Error | null) => {
           if (err) {
@@ -161,6 +163,10 @@ export class BookRepository implements IBookRepository {
         resolve(false);
         return;
       }
+
+      // Always update the timestamp
+      updateFields.push('updated_at = ?');
+      values.push(new Date().toISOString());
 
       values.push(id);
       const sql = `UPDATE books SET ${updateFields.join(', ')} WHERE id = ?`;

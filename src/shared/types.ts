@@ -8,8 +8,8 @@ export interface Book {
   genre?: string;
   publication_year?: number;
   description?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface BookCopy {
@@ -66,8 +66,8 @@ export interface BookDbRow {
   genre?: string;
   publication_year?: number;
   description?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
   // Aggregated fields from joins
   total_copies?: number;
   available_copies?: number;
@@ -149,7 +149,7 @@ export interface Member {
   status?: 'active' | 'suspended' | 'inactive';
   max_books?: number;
   member_since?: string;
-  updated_at?: string;
+  updated_at: string;
 }
 
 export interface CreateMemberRequest {
