@@ -77,3 +77,15 @@ export function createMemberFormRoutes(memberController: MemberController): expr
 
   return router;
 }
+
+export function createReportsRoutes(reportsController: import('./ReportsController.js').ReportsController): express.Router {
+  const router = express.Router();
+
+  // GET /reports/popular-books - Get most popular books
+  router.get('/popular-books', reportsController.getPopularBooks);
+
+  // GET /reports/popular-books/detailed - Get popular books with statistics
+  router.get('/popular-books/detailed', reportsController.getPopularBooksWithStats);
+
+  return router;
+}

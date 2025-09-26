@@ -1,13 +1,14 @@
 import type { Request, Response } from 'express';
 import type { IBookService } from '../business/BookService.js';
-
 import type { IMemberService } from '../business/MemberService.js';
-import type { Book, Member } from '../shared/types.js';
+import type { ReportsService } from '../business/ReportsService.js';
+import type { Book, Member, ReportsFilters } from '../shared/types.js';
 
 export class WebController {
   constructor(
     private bookService: IBookService,
     private memberService?: IMemberService,
+    private reportsService?: ReportsService,
   ) {}
 
   // Helper method to convert book data for template rendering
@@ -484,6 +485,57 @@ export class WebController {
       res.status(500).render('error', {
         title: 'Error',
         error: 'Failed to load checkout page',
+        details: 'Internal server error',
+      });
+    }
+  };
+
+  // GET /reports - Reports page
+  reports = async (req: Request, res: Response): Promise<void> => {
+    try {
+      if (!this.reportsService) {
+        return res.status(500).render('error', {
+          title: 'Error',
+          error: 'Reports service not available',
+          details: 'Reports functionality is not configured',
+        });
+      }
+
+      const filters: ReportsFilters = {
+        period: (req.query.period as ReportsFilters['period']) || 'all-time',
+        limit: req.query.limit ? Number(req.query.limit) : 20,
+        genre: req.query.genre as string,
+        min_borrows: req.query.min_borrows ? Number(req.query.min_borrows) : 1,
+      };
+
+      const result = await this.reportsService.getPopularBooksWithStats(filters);
+
+      if (!result.success || !result.data) {
+        return res.render('reports', {
+          title: 'Library Reports',
+          books: [],
+          total: 0,
+          period: filters.period,
+          generated_at: new Date().toISOString(),
+          filters,
+          error: result.error || 'Failed to generate reports',
+        });
+      }
+
+      res.render('reports', {
+        title: 'Library Reports',
+        books: result.data.books,
+        total: result.data.total,
+        period: result.data.period,
+        generated_at: result.data.generated_at,
+        statistics: result.data.statistics,
+        filters,
+      });
+    } catch (error) {
+      console.error('Error in WebController.reports:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to load reports page',
         details: 'Internal server error',
       });
     }
