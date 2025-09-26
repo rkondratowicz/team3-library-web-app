@@ -20,39 +20,15 @@ const db = new sqlite3.Database(join(__dirname, '..', 'library.db'), (err: Error
   }
 });
 
-// Interface for Book object
-interface Book {
-  id: string;
-  author: string;
-  title: string;
-}
-
-// Interface for creating a new book (without ID)
-interface CreateBookRequest {
-  author: string;
-  title: string;
-}
-
-// Interface for the books response
-interface BooksResponse {
-  Books: Book[];
-}
-
-// Interface for single book response
-interface BookResponse {
-  book: Book;
-}
-
-// Interface for error response
-interface ErrorResponse {
-  error: string;
-  details?: string;
-}
-
-// Interface for greeting response
-interface GreetingResponse {
-  message: string;
-}
+// Import types from shared module instead of duplicating them
+import type {
+  Book,
+  BookResponse,
+  BooksResponse,
+  CreateBookRequest,
+  ErrorResponse,
+  GreetingResponse,
+} from './shared/types.js';
 
 app.use(express.json());
 
@@ -118,10 +94,17 @@ app.post('/books', (req: Request, res: Response<BookResponse | ErrorResponse>) =
     }
 
     // Return the created book
+    const currentTimestamp = new Date().toISOString();
     const newBook: Book = {
       id: bookId,
       author: trimmedAuthor,
       title: trimmedTitle,
+      isbn: undefined,
+      genre: undefined,
+      publication_year: undefined,
+      description: undefined,
+      created_at: currentTimestamp,
+      updated_at: currentTimestamp,
     };
 
     res.status(201).json({ book: newBook });
