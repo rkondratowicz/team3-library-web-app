@@ -9,7 +9,7 @@ export class WebController {
     private bookService: IBookService,
     private memberService?: IMemberService,
     private reportsService?: ReportsService,
-  ) {}
+  ) { }
 
   // Helper method to convert book data for template rendering
   private mapBookForTemplate(book: Book) {
