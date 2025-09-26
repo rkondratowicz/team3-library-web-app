@@ -43,6 +43,11 @@ This project uses [Biome](https://biomejs.dev/) for code formatting, linting, an
 - `npm run check` - Run all checks (format + lint + import sort)
 - `npm run check:fix` - Apply all safe fixes
 - `npm run check:unsafe` - Apply all fixes including unsafe ones
+- `npm run ci:check` - Run the same checks as CI (check + build)
+- `npm run ci:fix` - Fix issues and build (recommended before commits)
+
+**Pre-commit Helper:**
+- `./scripts/pre-commit.sh` - Run this before committing to fix all issues automatically
 
 ### Biome Configuration
 
