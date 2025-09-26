@@ -26,6 +26,29 @@
     </div>
   </div>
 
+  <!-- Success/Error Messages -->
+  {{#if successMessage}}
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> {{successMessage}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+
+  {{#if errorMessage}}
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i> {{errorMessage}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+
   <!-- Member Information -->
   <div class="row">
     <!-- Personal Information -->
@@ -114,17 +137,27 @@
                         </div>
                       </div>
                       <div class="col-md-4 text-md-end">
-                        {{#if is_overdue}}
-                          <span class="badge bg-danger fs-6 mb-2">
-                            <i class="bi bi-exclamation-triangle"></i> 
-                            {{overdue_days}} day{{#if (gt overdue_days 1)}}s{{/if}} overdue
-                          </span>
-                        {{else}}
-                          <span class="badge bg-success fs-6 mb-2">
-                            <i class="bi bi-check-circle"></i> On time
-                          </span>
-                        {{/if}}
-
+                        <div class="d-flex flex-column gap-2">
+                          {{#if is_overdue}}
+                            <span class="badge bg-danger fs-6">
+                              <i class="bi bi-exclamation-triangle"></i> 
+                              {{overdue_days}} day{{#if (gt overdue_days 1)}}s{{/if}} overdue
+                            </span>
+                          {{else}}
+                            <span class="badge bg-success fs-6">
+                              <i class="bi bi-check-circle"></i> On time
+                            </span>
+                          {{/if}}
+                          
+                          <!-- Return Book Button -->
+                          <form method="POST" action="/return/{{id}}" style="display: inline;">
+                            <input type="hidden" name="memberId" value="{{../member.id}}">
+                            <button type="submit" class="btn btn-sm {{#if is_overdue}}btn-warning{{else}}btn-outline-primary{{/if}}" 
+                                    onclick="return confirm('Are you sure you want to return &quot;{{book_title}}&quot;?')">
+                              <i class="bi bi-arrow-return-left"></i> Return Book
+                            </button>
+                          </form>
+                        </div>
                       </div>
                     </div>
                     {{#if notes}}
