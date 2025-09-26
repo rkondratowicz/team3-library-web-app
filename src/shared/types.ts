@@ -321,3 +321,37 @@ export type FineType = 'overdue' | 'lost' | 'damage' | 'late_return';
 
 // Fine status enumeration
 export type FineStatus = 'unpaid' | 'paid' | 'waived' | 'disputed';
+
+// ==========================================
+// Reports System Types
+// ==========================================
+
+// Popular books report interface
+export interface PopularBook {
+  book_id: string;
+  title: string;
+  author: string;
+  isbn?: string;
+  genre?: string;
+  publication_year?: number;
+  total_borrows: number;
+  current_borrows: number;
+  total_copies: number;
+  popularity_score: number; // Calculated metric
+}
+
+// Reports response interface
+export interface PopularBooksResponse {
+  books: PopularBook[];
+  total: number;
+  period?: string; // e.g., "all-time", "last-year", "last-month"
+  generated_at: string;
+}
+
+// Report filters
+export interface ReportsFilters {
+  period?: 'all-time' | 'last-year' | 'last-month' | 'last-week';
+  limit?: number;
+  genre?: string;
+  min_borrows?: number;
+}

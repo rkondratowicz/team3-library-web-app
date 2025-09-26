@@ -7,15 +7,17 @@ import methodOverride from 'method-override';
 
 import { BookService } from './business/BookService.js';
 import { MemberService } from './business/MemberService.js';
+import { ReportsService } from './business/ReportsService.js';
 import { BookRepository } from './data/BookRepository.js';
 import { BookController } from './presentation/BookController.js';
 import { HealthController } from './presentation/HealthController.js';
-
 import { MemberController } from './presentation/MemberController.js';
+import { ReportsController } from './presentation/ReportsController.js';
 import {
   createBookRoutes,
   createMemberFormRoutes,
   createMemberRoutes,
+  createReportsRoutes,
 } from './presentation/routes.js';
 import { WebController } from './presentation/WebController.js';
 
@@ -67,6 +69,23 @@ const hbs = create({
           return 'fas fa-question';
       }
     },
+    // Reports helpers
+    formatDateTime: (date: string) => {
+      if (!date) return '';
+      const dateObj = new Date(date);
+      return `${dateObj.toLocaleDateString('en-GB')} ${dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+    },
+    formatDecimal: (num: number, places: number) => {
+      if (typeof num !== 'number') return '0';
+      return num.toFixed(places || 2);
+    },
+    capitalize: (str: string) => {
+      if (!str) return '';
+      return str.replace(/[-_]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+    },
+    add: (a: unknown, b: unknown) => Number(a) + Number(b),
+    multiply: (a: unknown, b: unknown) => Number(a) * Number(b),
+    lte: (a: unknown, b: unknown) => Number(a) <= Number(b),
   },
 });
 
@@ -99,13 +118,18 @@ const bookController = new BookController(bookService);
 
 const memberService = new MemberService();
 const memberController = new MemberController(memberService);
-const webController = new WebController(bookService, memberService);
+const reportsService = new ReportsService();
+const reportsController = new ReportsController(reportsService);
+const webController = new WebController(bookService, memberService, reportsService);
 const healthController = new HealthController();
 
 // API Routes (with /api prefix)
 app.use('/api/books', createBookRoutes(bookController));
 
 app.use('/api/members', createMemberRoutes(memberController));
+
+// Reports API Routes
+app.use('/api/reports', createReportsRoutes(reportsController));
 
 // Form handling routes (for web application forms with redirects)
 app.use('/api/form/members', createMemberFormRoutes(memberController));
@@ -128,6 +152,9 @@ app.get('/members', webController.members);
 app.get('/members/add', webController.addMemberForm);
 app.get('/members/:id', webController.memberDetails);
 app.get('/members/:id/edit', webController.editMemberForm);
+
+// Reports Web Routes
+app.get('/reports', webController.reports);
 
 // Global error handler
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -1,0 +1,267 @@
+{{#> layouts/main title=title}}
+
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Reports</li>
+        </ol>
+      </nav>
+      
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h2 mb-0">
+          <i class="bi bi-bar-chart"></i> Library Reports
+        </h1>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-funnel"></i> Report Filters
+          </h5>
+        </div>
+        <div class="card-body">
+          <form id="filtersForm" class="row g-3">
+            <div class="col-md-3">
+              <label for="period" class="form-label">Time Period</label>
+              <select class="form-select" id="period" name="period">
+                <option value="all-time" {{#if (eq filters.period 'all-time')}}selected{{/if}}>All Time</option>
+                <option value="last-year" {{#if (eq filters.period 'last-year')}}selected{{/if}}>Last Year</option>
+                <option value="last-month" {{#if (eq filters.period 'last-month')}}selected{{/if}}>Last Month</option>
+                <option value="last-week" {{#if (eq filters.period 'last-week')}}selected{{/if}}>Last Week</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="genre" class="form-label">Genre</label>
+              <select class="form-select" id="genre" name="genre">
+                <option value="">All Genres</option>
+                <option value="Fiction" {{#if (eq filters.genre 'Fiction')}}selected{{/if}}>Fiction</option>
+                <option value="Non-Fiction" {{#if (eq filters.genre 'Non-Fiction')}}selected{{/if}}>Non-Fiction</option>
+                <option value="Mystery" {{#if (eq filters.genre 'Mystery')}}selected{{/if}}>Mystery</option>
+                <option value="Romance" {{#if (eq filters.genre 'Romance')}}selected{{/if}}>Romance</option>
+                <option value="Science Fiction" {{#if (eq filters.genre 'Science Fiction')}}selected{{/if}}>Science Fiction</option>
+                <option value="Fantasy" {{#if (eq filters.genre 'Fantasy')}}selected{{/if}}>Fantasy</option>
+                <option value="Biography" {{#if (eq filters.genre 'Biography')}}selected{{/if}}>Biography</option>
+                <option value="History" {{#if (eq filters.genre 'History')}}selected{{/if}}>History</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label for="limit" class="form-label">Show Top</label>
+              <select class="form-select" id="limit" name="limit">
+                <option value="10" {{#if (eq filters.limit 10)}}selected{{/if}}>10</option>
+                <option value="20" {{#if (eq filters.limit 20)}}selected{{/if}}>20</option>
+                <option value="50" {{#if (eq filters.limit 50)}}selected{{/if}}>50</option>
+                <option value="100" {{#if (eq filters.limit 100)}}selected{{/if}}>100</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label for="min_borrows" class="form-label">Min. Borrows</label>
+              <input type="number" class="form-control" id="min_borrows" name="min_borrows" 
+                     value="{{filters.min_borrows}}" min="1" placeholder="1">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">&nbsp;</label>
+              <div>
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-search"></i> Apply Filters
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Summary -->
+  {{#if statistics}}
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card bg-light">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-graph-up"></i> Summary Statistics
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-md-2">
+              <div class="h3 mb-0 text-primary">{{statistics.total_unique_books}}</div>
+              <small class="text-muted">Total Books</small>
+            </div>
+            <div class="col-md-2">
+              <div class="h3 mb-0 text-info">{{statistics.total_borrowings}}</div>
+              <small class="text-muted">Total Borrowings</small>
+            </div>
+            <div class="col-md-2">
+              <div class="h3 mb-0 text-success">{{statistics.unique_borrowers}}</div>
+              <small class="text-muted">Unique Borrowers</small>
+            </div>
+            <div class="col-md-3">
+              <div class="h3 mb-0 text-warning">{{formatDecimal statistics.avg_borrows_per_book 1}}</div>
+              <small class="text-muted">Avg Borrows per Book</small>
+            </div>
+            <div class="col-md-3">
+              <div class="h3 mb-0 text-danger">{{statistics.max_borrows_single_book}}</div>
+              <small class="text-muted">Most Borrowed (Single Book)</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+
+  <!-- Popular Books Report -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-trophy"></i> Most Popular Books
+            {{#if period}}
+              <span class="badge bg-secondary ms-2">{{capitalize period}}</span>
+            {{/if}}
+          </h5>
+          <small class="text-muted">
+            Generated on {{formatDateTime generated_at}} | Showing {{total}} results
+          </small>
+        </div>
+        <div class="card-body">
+          {{#if books.length}}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="text-center">#</th>
+                    <th scope="col">Book Details</th>
+                    <th scope="col" class="text-center">Total Borrows</th>
+                    <th scope="col" class="text-center">Current Borrows</th>
+                    <th scope="col" class="text-center">Total Copies</th>
+                    <th scope="col" class="text-center">Popularity Score</th>
+                    <th scope="col" class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each books}}
+                  <tr>
+                    <td class="text-center">
+                      <span class="badge bg-{{#if (lte @index 2)}}gold{{else if (lte @index 4)}}silver{{else}}bronze{{/if}} fs-6">
+                        {{add @index 1}}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-start">
+                        <div>
+                          <h6 class="mb-1">
+                            <a href="/books/{{book_id}}" class="text-decoration-none">
+                              {{title}}
+                            </a>
+                          </h6>
+                          <p class="mb-1 text-muted">
+                            <i class="bi bi-person"></i> {{author}}
+                          </p>
+                          <div class="d-flex flex-wrap gap-2">
+                            {{#if isbn}}
+                            <small class="text-muted">
+                              <i class="bi bi-upc"></i> {{isbn}}
+                            </small>
+                            {{/if}}
+                            {{#if genre}}
+                            <span class="badge bg-light text-dark">{{genre}}</span>
+                            {{/if}}
+                            {{#if publication_year}}
+                            <small class="text-muted">{{publication_year}}</small>
+                            {{/if}}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-primary fs-6">{{total_borrows}}</span>
+                    </td>
+                    <td class="text-center">
+                      {{#if current_borrows}}
+                        <span class="badge bg-warning fs-6">{{current_borrows}}</span>
+                      {{else}}
+                        <span class="text-muted">0</span>
+                      {{/if}}
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-info fs-6">{{total_copies}}</span>
+                    </td>
+                    <td class="text-center">
+                      <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{multiply popularity_score 100}}%" 
+                             aria-valuenow="{{multiply popularity_score 100}}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                          {{formatDecimal popularity_score 2}}
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <a href="/books/{{book_id}}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i> View
+                      </a>
+                    </td>
+                  </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            </div>
+          {{else}}
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-bar-chart display-4"></i>
+              <p class="mt-3 mb-0">No borrowing data available</p>
+              <small>Try adjusting your filters or check back when there's more activity</small>
+            </div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Bootstrap Icons if not already included -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<script>
+document.getElementById('filtersForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const params = new URLSearchParams();
+    
+    for (let [key, value] of formData) {
+        if (value && value !== '') {
+            params.append(key, value);
+        }
+    }
+    
+    window.location.href = '/reports?' + params.toString();
+});
+
+// Badge color helper for rankings
+function getRankingBadgeClass(index) {
+    if (index <= 2) return 'bg-warning text-dark'; // Gold
+    if (index <= 4) return 'bg-secondary'; // Silver
+    return 'bg-dark'; // Bronze
+}
+</script>
+
+<style>
+.bg-gold { background-color: #FFD700 !important; color: #000 !important; }
+.bg-silver { background-color: #C0C0C0 !important; color: #000 !important; }
+.bg-bronze { background-color: #CD7F32 !important; color: #fff !important; }
+</style>
+
+{{/layouts/main}}
