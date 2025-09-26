@@ -8,8 +8,8 @@ export interface Book {
   genre?: string;
   publication_year?: number;
   description?: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface BookCopy {
@@ -18,8 +18,8 @@ export interface BookCopy {
   copy_number: number;
   status: 'available' | 'borrowed' | 'maintenance';
   condition: 'excellent' | 'good' | 'fair' | 'poor';
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateBookCopyRequest {
@@ -66,8 +66,8 @@ export interface BookDbRow {
   genre?: string;
   publication_year?: number;
   description?: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
   // Aggregated fields from joins
   total_copies?: number;
   available_copies?: number;
@@ -149,7 +149,7 @@ export interface Member {
   status?: 'active' | 'suspended' | 'inactive';
   max_books?: number;
   member_since?: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface CreateMemberRequest {
@@ -229,8 +229,8 @@ export interface Borrowing {
   renewal_count: number;
   status: BorrowingStatus;
   notes?: string; // Optional notes
-  created_at: string; // ISO datetime string
-  updated_at: string; // ISO datetime string
+  created_at?: string; // ISO datetime string
+  updated_at?: string; // ISO datetime string
 }
 
 // Borrowing status enumeration
@@ -269,8 +269,8 @@ export interface Fine {
   paid_date?: string; // Optional ISO date string
   status: FineStatus;
   description?: string; // Optional description
-  created_at: string; // ISO datetime string
-  updated_at: string; // ISO datetime string
+  created_at?: string; // ISO datetime string
+  updated_at?: string; // ISO datetime string
 }
 
 // Fine type enumeration
