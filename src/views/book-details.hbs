@@ -1,3 +1,47 @@
+<!-- Success Messages -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const successParam = urlParams.get('success');
+    
+    let alertDiv;
+    let message = '';
+    
+    if (successParam === 'copy-added') {
+        message = '<i class="fas fa-check-circle"></i> <strong>Success!</strong> Book copy has been added successfully.';
+    } else if (successParam === 'copies-added') {
+        const count = urlParams.get('count') || 'multiple';
+        message = `<i class="fas fa-check-circle"></i> <strong>Success!</strong> ${count} book copies have been added successfully.`;
+    } else if (successParam === 'partial-success') {
+        const added = urlParams.get('added') || '0';
+        const failed = urlParams.get('failed') || '0';
+        message = `<i class="fas fa-exclamation-triangle"></i> <strong>Partial Success:</strong> ${added} copies added successfully, ${failed} failed.`;
+    }
+    
+    if (message) {
+        // Create and show success alert
+        alertDiv = document.createElement('div');
+        alertDiv.className = successParam === 'partial-success' 
+            ? 'alert alert-warning alert-dismissible fade show'
+            : 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at the top of the page
+        const container = document.querySelector('.container-fluid') || document.body;
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Remove the success parameters from URL
+        if (window.history.replaceState) {
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: newUrl}, '', newUrl);
+        }
+    }
+});
+</script>
+
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -152,7 +196,12 @@
                 {{#if book.totalCopies}}
                 <!-- Individual Copy Status -->
                 <div class="mb-3">
-                    <h6 class="text-muted mb-2">Copy Status:</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-muted mb-0">Copy Inventory:</h6>
+                        <small class="text-muted">
+                            {{book.availableCopies}}/{{book.totalCopies}} available
+                        </small>
+                    </div>
                     <div class="d-flex flex-wrap gap-1">
                         {{#each book.copies}}
                         <span class="badge {{statusClass status}} fs-6 {{#if borrower}}copy-clickable{{/if}}" 
@@ -169,6 +218,12 @@
                             {{#if borrower}}<i class="fas fa-info-circle ms-1"></i>{{/if}}
                         </span>
                         {{/each}}
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            Copy IDs are unique across the entire library collection
+                        </small>
                     </div>
                 </div>
                 {{/if}}

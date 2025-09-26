@@ -2,13 +2,13 @@ import type { Request, Response } from 'express';
 import type { IBookService } from '../business/BookService.js';
 
 import type { IMemberService } from '../business/MemberService.js';
-import type { Book, Member } from '../shared/types.js';
+import type { Book, BookCopy, Member } from '../shared/types.js';
 
 export class WebController {
   constructor(
     private bookService: IBookService,
     private memberService?: IMemberService,
-  ) {}
+  ) { }
 
   // Helper method to convert book data for template rendering
   private mapBookForTemplate(book: Book) {
@@ -247,6 +247,148 @@ export class WebController {
       res.status(500).render('error', {
         title: 'Error',
         error: 'Failed to load book for editing',
+        details: 'Internal server error',
+      });
+    }
+  };
+
+  // GET /books/:id/add-copy - Add copy form
+  addCopyForm = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const bookResult = await this.bookService.getBookById(id);
+
+      if (bookResult.success && bookResult.data) {
+        const book = bookResult.data;
+
+        // Get existing copies to determine next copy number
+        const copiesResult = await this.bookService.getBookCopies(id);
+        let nextCopyNumber = 1;
+
+        if (copiesResult.success && copiesResult.data) {
+          const copies = copiesResult.data;
+          nextCopyNumber = copies.length + 1;
+
+          // Calculate copy statistics
+          const totalCopies = copies.length;
+          const availableCopies = copies.filter((copy) => copy.status === 'available').length;
+          const checkedOutCopies = copies.filter((copy) => copy.status === 'borrowed').length;
+
+          const bookWithCopyInfo = {
+            ...this.mapBookForTemplate(book),
+            totalCopies,
+            availableCopies,
+            checkedOutCopies,
+          };
+
+          res.render('add-copy-form', {
+            title: `Add Copy - ${book.title}`,
+            book: bookWithCopyInfo,
+            nextCopyNumber,
+          });
+        } else {
+          // No copies exist yet
+          const bookWithCopyInfo = {
+            ...this.mapBookForTemplate(book),
+            totalCopies: 0,
+            availableCopies: 0,
+            checkedOutCopies: 0,
+          };
+
+          res.render('add-copy-form', {
+            title: `Add Copy - ${book.title}`,
+            book: bookWithCopyInfo,
+            nextCopyNumber,
+          });
+        }
+      } else {
+        res.status(404).render('error', {
+          title: 'Book Not Found',
+          error: 'Book not found',
+          details: 'The requested book could not be found.',
+        });
+      }
+    } catch (error) {
+      console.error('Error in WebController.addCopyForm:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to load add copy form',
+        details: 'Internal server error',
+      });
+    }
+  };
+
+  // POST /books/:id/add-copy - Handle add copy form submission
+  addCopyFormSubmit = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { copyId, quantity = '1', condition = 'excellent' } = req.body;
+      const numCopies = parseInt(quantity, 10);
+
+      // Validate quantity
+      if (Number.isNaN(numCopies) || numCopies < 1 || numCopies > 10) {
+        res.status(400).render('error', {
+          title: 'Invalid Input',
+          error: 'Invalid quantity',
+          details: 'Please select a valid number of copies (1-10).',
+        });
+        return;
+      }
+
+      // For single copy, require copyId
+      if (numCopies === 1 && !copyId?.trim()) {
+        res.status(400).render('error', {
+          title: 'Invalid Input',
+          error: 'Copy ID is required',
+          details: 'Please provide a valid copy ID.',
+        });
+        return;
+      }
+
+      const addedCopies: BookCopy[] = [];
+      const failedCopies: string[] = [];
+
+      // Add multiple copies
+      for (let i = 0; i < numCopies; i++) {
+        const copyData = {
+          book_id: id,
+          id: numCopies === 1 ? copyId.trim() : undefined, // Let service generate ID for multiple copies
+          condition: condition as 'excellent' | 'good' | 'fair' | 'poor',
+        };
+
+        const result = await this.bookService.addBookCopy(id, copyData);
+
+        if (result.success && result.data) {
+          addedCopies.push(result.data);
+        } else {
+          failedCopies.push(result.error || 'Unknown error');
+        }
+      }
+
+      // Determine success message
+      if (addedCopies.length === numCopies) {
+        // All copies added successfully
+        const successMessage =
+          numCopies === 1 ? 'copy-added' : `copies-added&count=${addedCopies.length}`;
+        res.redirect(`/books/${id}?success=${successMessage}`);
+      } else if (addedCopies.length > 0) {
+        // Some copies added, some failed
+        res.redirect(
+          `/books/${id}?success=partial-success&added=${addedCopies.length}&failed=${failedCopies.length}`,
+        );
+      } else {
+        // All copies failed
+        res.status(400).render('error', {
+          title: 'Failed to Add Copies',
+          error: 'No copies could be added',
+          details: failedCopies.join('; '),
+        });
+      }
+    } catch (error) {
+      console.error('Error in WebController.addCopyFormSubmit:', error);
+      res.status(500).render('error', {
+        title: 'Error',
+        error: 'Failed to add book copy',
         details: 'Internal server error',
       });
     }
