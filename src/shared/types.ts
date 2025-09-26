@@ -34,6 +34,7 @@ export interface BookCopyWithBorrower extends BookCopy {
 
 export interface CreateBookCopyRequest {
   book_id: string;
+  id?: string; // Optional custom copy ID
   condition?: 'excellent' | 'good' | 'fair' | 'poor';
 }
 

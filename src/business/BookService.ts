@@ -501,13 +501,52 @@ export class BookService implements IBookService {
       // Get next copy number
       const copyNumber = await this.bookRepository.getNextCopyNumber(bookId);
 
+      // Use provided ID or generate a new UUID
+      const copyId = copyData.id?.trim() || uuidv4();
+
+      // Validate custom ID format if provided
+      if (copyData.id?.trim()) {
+        const idPattern = /^[a-zA-Z0-9\-_]+$/;
+        const minLength = 6;
+        const maxLength = 50;
+
+        if (!copyData.id.match(idPattern)) {
+          return {
+            success: false,
+            error:
+              'Invalid copy ID format. Only letters, numbers, hyphens, and underscores are allowed.',
+            statusCode: 400,
+          };
+        }
+
+        if (copyData.id.length < minLength || copyData.id.length > maxLength) {
+          return {
+            success: false,
+            error: `Copy ID must be between ${minLength} and ${maxLength} characters long.`,
+            statusCode: 400,
+          };
+        }
+      }
+
+      // Check if custom ID already exists (if provided)
+      if (copyData.id?.trim()) {
+        const existingCopy = await this.bookRepository.getBookCopyById(copyId);
+        if (existingCopy) {
+          return {
+            success: false,
+            error: 'Copy ID already exists. Please use a different ID.',
+            statusCode: 409,
+          };
+        }
+      }
+
       // Create new book copy
       const newBookCopy: BookCopy = {
-        id: uuidv4(),
+        id: copyId,
         book_id: bookId,
         copy_number: copyNumber,
         status: 'available',
-        condition: copyData.condition || 'good',
+        condition: copyData.condition || 'excellent',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
